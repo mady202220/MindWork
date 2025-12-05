@@ -1005,7 +1005,8 @@ def check_auth():
 
 @app.route('/api/check-job', methods=['POST'])
 def check_job():
-    if 'user_email' not in session:
+    # Allow Chrome extension requests
+    if 'user_email' not in session and request.headers.get('X-Chrome-Extension') != 'mindwork':
         return jsonify({'error': 'Authentication required'}), 401
         
     data = request.json
@@ -1024,7 +1025,8 @@ def check_job():
 
 @app.route('/api/rss-feeds', methods=['GET'])
 def get_rss_feeds_api():
-    if 'user_email' not in session:
+    # Allow Chrome extension requests
+    if 'user_email' not in session and request.headers.get('X-Chrome-Extension') != 'mindwork':
         return jsonify({'error': 'Authentication required'}), 401
         
     try:
@@ -1043,7 +1045,8 @@ def get_rss_feeds_api():
 
 @app.route('/api/create-job', methods=['POST'])
 def create_job():
-    if 'user_email' not in session:
+    # Allow Chrome extension requests
+    if 'user_email' not in session and request.headers.get('X-Chrome-Extension') != 'mindwork':
         return jsonify({'error': 'Authentication required'}), 401
         
     data = request.json

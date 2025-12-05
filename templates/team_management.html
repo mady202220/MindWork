@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Team Management - MindWork</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav-tabs { background: #34495e; padding: 0; margin: 0; display: flex; }
+        .nav-tab { padding: 15px 25px; color: white; text-decoration: none; border-right: 1px solid #2c3e50; }
+        .nav-tab:hover { background: #2c3e50; }
+        .nav-tab.active { background: #3498db; }
+        .admin-tab { margin-left: auto; background: #e74c3c; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .profile-card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .profile-header { display: flex; justify-content: between; align-items: center; margin-bottom: 15px; }
+        .profile-name { font-size: 18px; font-weight: bold; color: #2c3e50; }
+        .profile-title { color: #7f8c8d; font-size: 14px; margin: 5px 0; }
+        .profile-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .edit-form { display: none; background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .form-group { margin: 10px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .form-group textarea { height: 80px; resize: vertical; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Team Management</h1>
+        <p>Manage team member profiles and skills</p>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab">Dashboard</a>
+        <a href="/team-management" class="nav-tab active">👥 Team Management</a>
+        <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ profiles|length }}</h3>
+                <p>Total Profiles</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="active-count">0</h3>
+                <p>Active</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="inactive-count">0</h3>
+                <p>Inactive</p>
+            </div>
+            <div class="stat-card">
+                <button class="btn btn-success" onclick="showAddForm()" style="width: 100%; height: 60px; font-size: 16px;">➕ Add New Member</button>
+            </div>
+        </div>
+
+        <!-- Add New Profile Form -->
+        <div id="add-profile-form" class="profile-card" style="display: none;">
+            <h3>Add New Team Member</h3>
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="new-name" placeholder="Full Name">
+            </div>
+            <div class="form-group">
+                <label>Title:</label>
+                <input type="text" id="new-title" placeholder="Professional Title">
+            </div>
+            <div class="form-group">
+                <label>Skills:</label>
+                <textarea id="new-skills" placeholder="Comma-separated skills"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea id="new-description" placeholder="Professional description"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Profile URL:</label>
+                <input type="text" id="new-profile-url" placeholder="Upwork profile URL">
+            </div>
+            <div class="form-group">
+                <label>Hourly Rate:</label>
+                <input type="text" id="new-hourly-rate" placeholder="$25-50/hr">
+            </div>
+            <div class="form-group">
+                <label>Experience Years:</label>
+                <input type="number" id="new-experience" placeholder="5">
+            </div>
+            <div class="form-group">
+                <label>Specialization:</label>
+                <input type="text" id="new-specialization" placeholder="Main specialization area">
+            </div>
+            <div class="form-group">
+                <label>Status:</label>
+                <select id="new-active">
+                    <option value="1">Active</option>
+                    <option value="0">Inactive</option>
+                </select>
+            </div>
+            <button class="btn btn-success" onclick="addNewProfile()">Add Profile</button>
+            <button class="btn btn-warning" onclick="hideAddForm()">Cancel</button>
+        </div>
+
+        {% for profile in profiles %}
+        <div class="profile-card">
+            <div class="profile-header">
+                <div>
+                    <div class="profile-name">{{ profile[1] }}</div>
+                    <div class="profile-title">{{ profile[2] }}</div>
+                    <span class="status-badge {% if profile[9] == 1 %}status-active{% else %}status-inactive{% endif %}">
+                        {% if profile[9] == 1 %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="toggleEdit('{{ profile[0] }}')">Edit Profile</button>
+                    <a href="{{ profile[5] }}" target="_blank" class="btn btn-success">View Upwork</a>
+                </div>
+            </div>
+            
+            <div class="profile-meta">
+                <div><strong>Experience:</strong> {{ profile[7] }} years</div>
+                <div><strong>Hourly Rate:</strong> {{ profile[6] }}</div>
+                <div><strong>Specialization:</strong> {{ profile[8] }}</div>
+            </div>
+            
+            <div><strong>Skills:</strong> {{ profile[3] }}</div>
+            <div style="margin-top: 10px;"><strong>Description:</strong> {{ profile[4][:200] }}...</div>
+            
+            <!-- Edit Form -->
+            <div id="edit-form-{{ profile[0] }}" class="edit-form">
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="name-{{ profile[0] }}" value="{{ profile[1] }}">
+                </div>
+                <div class="form-group">
+                    <label>Title:</label>
+                    <input type="text" id="title-{{ profile[0] }}" value="{{ profile[2] }}">
+                </div>
+                <div class="form-group">
+                    <label>Skills:</label>
+                    <textarea id="skills-{{ profile[0] }}">{{ profile[3] }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="description-{{ profile[0] }}">{{ profile[4] }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Profile URL:</label>
+                    <input type="text" id="profile-url-{{ profile[0] }}" value="{{ profile[5] }}">
+                </div>
+                <div class="form-group">
+                    <label>Hourly Rate:</label>
+                    <input type="text" id="hourly-rate-{{ profile[0] }}" value="{{ profile[6] }}">
+                </div>
+                <div class="form-group">
+                    <label>Experience Years:</label>
+                    <input type="number" id="experience-{{ profile[0] }}" value="{{ profile[7] }}">
+                </div>
+                <div class="form-group">
+                    <label>Specialization:</label>
+                    <input type="text" id="specialization-{{ profile[0] }}" value="{{ profile[8] }}">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="active-{{ profile[0] }}">
+                        <option value="1" {% if profile[9] == 1 %}selected{% endif %}>Active</option>
+                        <option value="0" {% if profile[9] == 0 %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="saveProfile('{{ profile[0] }}')">Save Changes</button>
+                <button class="btn btn-warning" onclick="toggleEdit('{{ profile[0] }}')">Cancel</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function toggleEdit(profileId) {
+            const form = document.getElementById(`edit-form-${profileId}`);
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function saveProfile(profileId) {
+            const data = {
+                name: document.getElementById(`name-${profileId}`).value,
+                title: document.getElementById(`title-${profileId}`).value,
+                skills: document.getElementById(`skills-${profileId}`).value,
+                description: document.getElementById(`description-${profileId}`).value,
+                profile_url: document.getElementById(`profile-url-${profileId}`).value,
+                hourly_rate: document.getElementById(`hourly-rate-${profileId}`).value,
+                experience_years: parseInt(document.getElementById(`experience-${profileId}`).value),
+                specialization: document.getElementById(`specialization-${profileId}`).value,
+                active: parseInt(document.getElementById(`active-${profileId}`).value)
+            };
+            
+            fetch(`/update_profile/${profileId}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Profile updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to update profile');
+                }
+            })
+            .catch(error => {
+                alert('Error updating profile: ' + error);
+            });
+        }
+        
+        function updateStats() {
+            let activeCount = 0;
+            let inactiveCount = 0;
+            
+            document.querySelectorAll('.status-badge').forEach(badge => {
+                if (badge.textContent.trim() === 'Active') {
+                    activeCount++;
+                } else {
+                    inactiveCount++;
+                }
+            });
+            
+            document.getElementById('active-count').textContent = activeCount;
+            document.getElementById('inactive-count').textContent = inactiveCount;
+        }
+        
+        function showAddForm() {
+            document.getElementById('add-profile-form').style.display = 'block';
+        }
+        
+        function hideAddForm() {
+            document.getElementById('add-profile-form').style.display = 'none';
+            // Clear form
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-title').value = '';
+            document.getElementById('new-skills').value = '';
+            document.getElementById('new-description').value = '';
+            document.getElementById('new-profile-url').value = '';
+            document.getElementById('new-hourly-rate').value = '';
+            document.getElementById('new-experience').value = '';
+            document.getElementById('new-specialization').value = '';
+        }
+        
+        function addNewProfile() {
+            const data = {
+                name: document.getElementById('new-name').value,
+                title: document.getElementById('new-title').value,
+                skills: document.getElementById('new-skills').value,
+                description: document.getElementById('new-description').value,
+                profile_url: document.getElementById('new-profile-url').value,
+                hourly_rate: document.getElementById('new-hourly-rate').value,
+                experience_years: parseInt(document.getElementById('new-experience').value) || 0,
+                specialization: document.getElementById('new-specialization').value,
+                active: parseInt(document.getElementById('new-active').value)
+            };
+            
+            if (!data.name || !data.title) {
+                alert('Name and Title are required');
+                return;
+            }
+            
+            fetch('/add_profile', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('New team member added successfully!');
+                    location.reload();
+                } else {
+                    alert('Failed to add team member');
+                }
+            })
+            .catch(error => {
+                alert('Error adding team member: ' + error);
+            });
+        }
+        
+        updateStats();
+    </script>
+</body>
+</html>

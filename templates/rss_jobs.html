@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ current_feed[1] }} - Jobs</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 20px; }
+        .nav-tabs { background: #34495e; padding: 0; margin: 0; display: flex; }
+        .nav-tab { padding: 15px 25px; color: white; text-decoration: none; border-right: 1px solid #2c3e50; }
+        .nav-tab:hover { background: #2c3e50; }
+        .nav-tab.active { background: #3498db; }
+        .admin-tab { margin-left: auto; background: #e74c3c; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 20px; }
+        .job-card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .job-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        .job-meta { color: #7f8c8d; font-size: 14px; margin-bottom: 15px; }
+        .job-meta div { margin: 5px 0; }
+        .job-description { margin: 15px 0; line-height: 1.6; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-success { background: #27ae60; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn:hover { opacity: 0.8; }
+        .enrichment-section { background: #fff3cd; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #ffc107; }
+        .enrichment-results { background: #d4edda; padding: 15px; margin: 10px 0; border-radius: 4px; }
+        .proposal-section { background: #ecf0f1; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        .examples { background: #fff; padding: 15px; margin: 10px 0; border-left: 4px solid #3498db; }
+        .debug-section { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #6c757d; }
+        .form-group { margin: 10px 0; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .loading { text-align: center; padding: 20px; color: #7f8c8d; }
+        .edit-fields { display: none; background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .stats { display: flex; gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 8px; text-align: center; flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ current_feed[1] }} Jobs</h1>
+        <p>{{ current_feed[2] }}</p>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab">Dashboard</a>
+        {% for feed in feeds %}
+        <a href="/rss/{{ feed[0] }}" class="nav-tab {% if feed[0] == current_feed[0] %}active{% endif %}">
+            {{ feed[1] }}
+            {% if feed[3] == 0 %}<span style="opacity: 0.5;"> (Paused)</span>{% endif %}
+        </a>
+        {% endfor %}
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
+        <a href="/team-management" class="nav-tab">👥 Team</a>
+        <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
+    </div>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <h3>{{ jobs|length }}</h3>
+                <p>Total Jobs</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="processed-count">0</h3>
+                <p>Processed</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="enriched-count">0</h3>
+                <p>Enriched</p>
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="Search jobs by title, client, or description..." 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;" 
+                   onkeyup="searchJobs()">
+        </div>
+
+        {% if jobs|length == 0 %}
+        <div style="background: white; padding: 30px; border-radius: 8px; text-align: center;">
+            <h3>No jobs found</h3>
+            <p>Jobs will appear here automatically as they are fetched from the RSS feed every 10 minutes.</p>
+        </div>
+        {% endif %}
+
+        {% for job in jobs %}
+        <div class="job-card" id="job-{{ job[0] }}">
+            <div class="job-title">{{ job[1] }}</div>
+            <div class="job-meta">
+                <div><strong>Client:</strong> {{ job[4] }} | <strong>Posted:</strong> {{ job[6][:10] }}</div>
+                <div><strong>Budget:</strong> {{ job[5] }}</div>
+                {% if job|length > 17 %}
+                    <div><strong>Hourly Rate:</strong> {{ job[20] or 'Not specified' }}</div>
+                    <div><strong>Skills:</strong> {{ job[18] or 'Not specified' }}</div>
+                    <div><strong>Categories:</strong> {{ job[19] or 'Not specified' }}</div>
+                {% endif %}
+                <div style="margin-top: 10px;">
+                    {% if job[7] == 1 %}<span style="color: green; margin-right: 10px;">✓ Processed</span>{% endif %}
+                    {% if job[17] == 1 %}<span style="color: blue;">🔍 Enriched</span>{% endif %}
+                </div>
+            </div>
+            <div class="job-description">{{ job[2][:300] }}...</div>
+            <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">View Job</a>
+            <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
+            <button class="btn" style="background: #e74c3c; color: white;" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
+            
+            <!-- Client Enrichment Section -->
+            <div class="enrichment-section">
+                <h4>🔍 Client Enrichment</h4>
+                {% if job[17] == 1 %}
+                    <div class="enrichment-results">
+                        <strong>✅ Enriched Data:</strong><br>
+                        <div style="background: #d4edda; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                            <strong>Type:</strong> {{ job[8] or 'N/A' }}<br>
+                            <strong>Name:</strong> {{ job[9] or 'N/A' }}<br>
+                            <strong>Company:</strong> {{ job[10] or 'N/A' }}<br>
+                            <strong>Location:</strong> {{ job[11] or 'N/A' }}, {{ job[12] or 'N/A' }}<br>
+                            <strong>LinkedIn:</strong> <a href="{{ job[13] }}" target="_blank">{{ job[13] or 'N/A' }}</a><br>
+                            <strong>Email:</strong> {{ job[14] or 'N/A' }}<br>
+                            <strong>Phone:</strong> {{ job[15] or 'N/A' }}<br>
+                            <strong>WhatsApp:</strong> {{ job[16] or 'N/A' }}<br>
+                            <strong>Decision Maker:</strong> {{ job[18] or 'N/A' }}<br>
+                        </div>
+                        <button class="btn btn-warning" onclick="toggleEditFields('{{ job[0] }}')">Edit</button>
+                    </div>
+                    
+                    <div id="edit-fields-{{ job[0] }}" class="edit-fields">
+                        <div class="form-group">
+                            <input type="text" id="edit-linkedin-{{ job[0] }}" value="{{ job[13] }}" placeholder="LinkedIn URL">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="edit-email-{{ job[0] }}" value="{{ job[14] }}" placeholder="Email">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="edit-phone-{{ job[0] }}" value="{{ job[15] }}" placeholder="Phone">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="edit-whatsapp-{{ job[0] }}" value="{{ job[16] }}" placeholder="WhatsApp">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="edit-decision-maker-{{ job[0] }}" value="{{ job[18] }}" placeholder="Decision Maker Name">
+                        </div>
+                        <button class="btn btn-success" onclick="updateEnrichment('{{ job[0] }}')">Save Changes</button>
+                    </div>
+                {% else %}
+                    <div class="form-group">
+                        <input type="text" id="client-company-{{ job[0] }}" placeholder="Company Name">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="client-name-{{ job[0] }}" placeholder="Person Name">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="client-city-{{ job[0] }}" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="client-country-{{ job[0] }}" placeholder="Country">
+                    </div>
+                    <div class="form-group">
+                        <label for="enrichment-author-{{ job[0] }}">Added by:</label>
+                        <select id="enrichment-author-{{ job[0] }}">
+                            <option value="Ashish">Ashish</option>
+                            <option value="Saloni">Saloni</option>
+                            <option value="Madhuri">Madhuri</option>
+                            <option value="Mehul">Mehul</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-warning" onclick="enrichClient('{{ job[0] }}', {{ current_feed[0] }})">🔍 Enrich Client (2-5 min)</button>
+                {% endif %}
+                
+                <div id="enrichment-results-{{ job[0] }}" style="display: none;"></div>
+            </div>
+            
+            <div id="proposal-{{ job[0] }}" class="proposal-section" style="display: none;">
+                <h3>Generated Proposal:</h3>
+                <div id="proposal-content-{{ job[0] }}"></div>
+                <div id="examples-{{ job[0] }}" class="examples"></div>
+                <div id="debug-{{ job[0] }}" class="debug-section" style="display: none;">
+                    <h4>🐛 Debug Log:</h4>
+                    <div id="debug-content-{{ job[0] }}"></div>
+                </div>
+                <button class="btn btn-primary" onclick="toggleDebug('{{ job[0] }}')">Show/Hide Debug</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function generateProposal(jobId, rssId) {
+            const proposalDiv = document.getElementById(`proposal-${jobId}`);
+            const contentDiv = document.getElementById(`proposal-content-${jobId}`);
+            const examplesDiv = document.getElementById(`examples-${jobId}`);
+            const debugDiv = document.getElementById(`debug-content-${jobId}`);
+            
+            proposalDiv.style.display = 'block';
+            contentDiv.innerHTML = '<div class="loading">🔄 Generating proposal...</div>';
+            
+            fetch('/generate_proposal', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({job_id: jobId, rss_id: rssId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    contentDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
+                    if (data.debug_log) {
+                        debugDiv.innerHTML = data.debug_log.join('<br>');
+                    }
+                    return;
+                }
+                
+                contentDiv.innerHTML = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin: 10px 0;">
+                        <h4>📝 Generated Proposal:</h4>
+                        <div style="white-space: pre-wrap; font-family: Arial; line-height: 1.6; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">${data.proposal}</div>
+                    </div>
+                `;
+                
+                let examplesHtml = `<h4>🔍 Work Examples Used (Keywords: ${data.keywords.join(', ')}):</h4>`;
+                data.examples.forEach((ex, i) => {
+                    examplesHtml += `
+                        <div style="margin: 10px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;">
+                            <strong style="color: #2c3e50;">${i+1}. ${ex.name}</strong><br>
+                            <a href="${ex.url}" target="_blank" style="color: #3498db; font-size: 12px;">${ex.url}</a><br>
+                            <p style="margin: 8px 0; color: #555;">${ex.description}</p>
+                            <small style="color: #7f8c8d;">Installs: ${ex.installs}</small>
+                        </div>
+                    `;
+                });
+                examplesDiv.innerHTML = examplesHtml;
+                
+                if (data.debug_log) {
+                    debugDiv.innerHTML = data.debug_log.join('<br>');
+                }
+                
+                updateStats();
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
+            });
+        }
+        
+
+        
+        function enrichClient(jobId, rssId) {
+            console.log('enrichClient called with:', jobId, rssId);
+            
+            const clientNameEl = document.getElementById(`client-name-${jobId}`);
+            const clientCompanyEl = document.getElementById(`client-company-${jobId}`);
+            const clientCityEl = document.getElementById(`client-city-${jobId}`);
+            const clientCountryEl = document.getElementById(`client-country-${jobId}`);
+            const enrichmentAuthorEl = document.getElementById(`enrichment-author-${jobId}`);
+            
+            if (!clientCityEl || !clientCountryEl || !enrichmentAuthorEl) {
+                alert('Form elements not found. Please refresh the page.');
+                return;
+            }
+            
+            const clientName = clientNameEl ? clientNameEl.value : '';
+            const clientCompany = clientCompanyEl ? clientCompanyEl.value : '';
+            const clientCity = clientCityEl.value;
+            const clientCountry = clientCountryEl.value;
+            const enrichmentAuthor = enrichmentAuthorEl.value;
+            
+            if (!clientCity || !clientCountry) {
+                alert('Please fill City and Country');
+                return;
+            }
+            
+            if (!clientName && !clientCompany) {
+                alert('Please fill either Person Name or Company Name');
+                return;
+            }
+            
+            const resultsDiv = document.getElementById(`enrichment-results-${jobId}`);
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="loading">🔄 Enriching client data... (this may take 2-5 minutes)</div>';
+            
+            console.log('Sending enrichment data:', {
+                job_id: jobId,
+                rss_id: rssId,
+                client_name: clientName,
+                client_company: clientCompany,
+                client_city: clientCity,
+                client_country: clientCountry,
+                enrichment_author: enrichmentAuthor
+            });
+            
+            fetch('/enrich_client', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    job_id: jobId,
+                    rss_id: rssId,
+                    client_name: clientName,
+                    client_company: clientCompany,
+                    client_city: clientCity,
+                    client_country: clientCountry,
+                    enrichment_author: enrichmentAuthor
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Enrichment response:', data);
+                if (data.success) {
+                    const enrichment = data.enrichment;
+                    resultsDiv.innerHTML = `
+                        <div class="enrichment-results">
+                            <h5>📊 Enrichment Results:</h5>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div><strong>LinkedIn:</strong> <a href="${enrichment.linkedin_url}" target="_blank">${enrichment.linkedin_url}</a></div>
+                                <div><strong>Email:</strong> ${enrichment.email}</div>
+                                <div><strong>Phone:</strong> ${enrichment.phone}</div>
+                                <div><strong>WhatsApp:</strong> ${enrichment.whatsapp}</div>
+                                <div><strong>Decision Maker:</strong> ${enrichment.decision_maker}</div>
+                            </div>
+                            <button class="btn btn-warning" onclick="toggleEditFields('${jobId}')">Edit Results</button>
+                        </div>
+                    `;
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    resultsDiv.innerHTML = `<div style="color: red;">Enrichment failed: ${data.error || 'Unknown error'}</div>`;
+                }
+            })
+            .catch(error => {
+                resultsDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
+            });
+        }
+        
+        function toggleEditFields(jobId) {
+            const editFields = document.getElementById(`edit-fields-${jobId}`);
+            editFields.style.display = editFields.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function updateEnrichment(jobId) {
+            const linkedin = document.getElementById(`edit-linkedin-${jobId}`).value;
+            const email = document.getElementById(`edit-email-${jobId}`).value;
+            const phone = document.getElementById(`edit-phone-${jobId}`).value;
+            const whatsapp = document.getElementById(`edit-whatsapp-${jobId}`).value;
+            const decisionMaker = document.getElementById(`edit-decision-maker-${jobId}`).value;
+            
+            fetch('/update_enrichment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    job_id: jobId,
+                    linkedin_url: linkedin,
+                    email: email,
+                    phone: phone,
+                    whatsapp: whatsapp,
+                    decision_maker: decisionMaker
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Enrichment data updated!');
+                    location.reload();
+                }
+            });
+        }
+        
+        function toggleDebug(jobId) {
+            const debugDiv = document.getElementById(`debug-${jobId}`);
+            debugDiv.style.display = debugDiv.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function updateStats() {
+            let processedCount = 0;
+            let enrichedCount = 0;
+            
+            document.querySelectorAll('.job-card').forEach(card => {
+                const meta = card.querySelector('.job-meta');
+                if (meta && meta.textContent.includes('✓ Processed')) {
+                    processedCount++;
+                }
+                
+                // Check for enrichment results div that's visible
+                const enrichmentResults = card.querySelector('.enrichment-results');
+                if (enrichmentResults && enrichmentResults.textContent.includes('✅ Enriched Data:')) {
+                    enrichedCount++;
+                }
+            });
+            
+            document.getElementById('processed-count').textContent = processedCount;
+            document.getElementById('enriched-count').textContent = enrichedCount;
+        }
+        
+        function deleteJob(jobId) {
+            if (confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+                fetch(`/delete_job/${jobId}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById(`job-${jobId}`).remove();
+                        updateStats();
+                        alert('Job deleted successfully!');
+                    } else {
+                        alert('Error deleting job: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting job: ' + error);
+                });
+            }
+        }
+        
+        updateStats();
+        setInterval(() => location.reload(), 600000);
+        
+        function searchJobs() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const jobCards = document.querySelectorAll('.job-card');
+            
+            jobCards.forEach(card => {
+                const title = card.querySelector('.job-title').textContent.toLowerCase();
+                const meta = card.querySelector('.job-meta').textContent.toLowerCase();
+                const description = card.querySelector('.job-description').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || meta.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

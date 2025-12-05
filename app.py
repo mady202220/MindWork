@@ -63,10 +63,16 @@ class MultiRSSProposalSystem:
                          (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
         
         # Insert hardcoded user if not exists
-        c.execute("SELECT COUNT(*) FROM users WHERE email = ?", ('madhuri.thakur@mindcrewtech.com',))
-        if c.fetchone()[0] == 0:
-            c.execute("INSERT INTO users (email, password) VALUES (?, ?)", 
-                     ('madhuri.thakur@mindcrewtech.com', 'mindcrew01'))
+        if os.getenv('DATABASE_URL'):
+            c.execute("SELECT COUNT(*) FROM users WHERE email = %s", ('madhuri.thakur@mindcrewtech.com',))
+            if c.fetchone()[0] == 0:
+                c.execute("INSERT INTO users (email, password) VALUES (%s, %s)", 
+                         ('madhuri.thakur@mindcrewtech.com', 'mindcrew01'))
+        else:
+            c.execute("SELECT COUNT(*) FROM users WHERE email = ?", ('madhuri.thakur@mindcrewtech.com',))
+            if c.fetchone()[0] == 0:
+                c.execute("INSERT INTO users (email, password) VALUES (?, ?)", 
+                         ('madhuri.thakur@mindcrewtech.com', 'mindcrew01'))
         
         # RSS Feeds table
         if os.getenv('DATABASE_URL'):
@@ -200,7 +206,7 @@ class MultiRSSProposalSystem:
         return feeds
     
     def get_jobs_by_rss(self, rss_id):
-        conn = sqlite3.connect('proposals.db')
+        conn = self.get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM jobs WHERE rss_source_id = ? AND enriched != 1 ORDER BY posted_date DESC", (rss_id,))
         jobs = c.fetchall()
@@ -486,7 +492,7 @@ class MultiRSSProposalSystem:
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", profile)
     
     def get_team_profiles(self):
-        conn = sqlite3.connect('proposals.db')
+        conn = self.get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM team_profiles ORDER BY name")
         profiles = c.fetchall()

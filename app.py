@@ -7,6 +7,8 @@ import hashlib
 import random
 from datetime import datetime
 import sqlite3
+import psycopg2
+from urllib.parse import urlparse
 import time
 import threading
 import traceback
@@ -37,13 +39,28 @@ class MultiRSSProposalSystem:
         self.init_db()
         self.rss_threads = {}
         
+    def get_db_connection(self):
+        database_url = os.getenv('DATABASE_URL')
+        if database_url:
+            # PostgreSQL connection
+            return psycopg2.connect(database_url)
+        else:
+            # SQLite fallback for local development
+            return sqlite3.connect('proposals.db')
+    
     def init_db(self):
-        conn = sqlite3.connect('proposals.db')
+        conn = self.get_db_connection()
         c = conn.cursor()
         
         # Users table
-        c.execute('''CREATE TABLE IF NOT EXISTS users
-                     (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
+        if os.getenv('DATABASE_URL'):
+            # PostgreSQL syntax
+            c.execute('''CREATE TABLE IF NOT EXISTS users
+                         (id SERIAL PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
+        else:
+            # SQLite syntax
+            c.execute('''CREATE TABLE IF NOT EXISTS users
+                         (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
         
         # Insert hardcoded user if not exists
         c.execute("SELECT COUNT(*) FROM users WHERE email = ?", ('madhuri.thakur@mindcrewtech.com',))
@@ -52,9 +69,14 @@ class MultiRSSProposalSystem:
                      ('madhuri.thakur@mindcrewtech.com', 'mindcrew01'))
         
         # RSS Feeds table
-        c.execute('''CREATE TABLE IF NOT EXISTS rss_feeds
-                     (id INTEGER PRIMARY KEY, name TEXT, url TEXT, active INTEGER DEFAULT 1,
-                      keyword_prompt TEXT, proposal_prompt TEXT, olostep_prompt TEXT)''')
+        if os.getenv('DATABASE_URL'):
+            c.execute('''CREATE TABLE IF NOT EXISTS rss_feeds
+                         (id SERIAL PRIMARY KEY, name TEXT, url TEXT, active INTEGER DEFAULT 1,
+                          keyword_prompt TEXT, proposal_prompt TEXT, olostep_prompt TEXT)''')
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS rss_feeds
+                         (id INTEGER PRIMARY KEY, name TEXT, url TEXT, active INTEGER DEFAULT 1,
+                          keyword_prompt TEXT, proposal_prompt TEXT, olostep_prompt TEXT)''')
         
         # Jobs table with RSS source
         c.execute('''CREATE TABLE IF NOT EXISTS jobs
@@ -170,7 +192,7 @@ class MultiRSSProposalSystem:
         conn.close()
         
     def get_rss_feeds(self):
-        conn = sqlite3.connect('proposals.db')
+        conn = self.get_db_connection()
         c = conn.cursor()
         c.execute("SELECT * FROM rss_feeds ORDER BY name")
         feeds = c.fetchall()

@@ -4,3 +4,4 @@ openai==1.35.0
 feedparser==6.0.11
 google-play-scraper==1.2.4
 httpx==0.24.1
+psycopg2-binary==2.9.7

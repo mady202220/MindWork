@@ -19,9 +19,12 @@ app.secret_key = 'mindcrew_secret_key_2024'
 
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    origin = request.headers.get('Origin')
+    if origin in ['https://www.upwork.com', 'http://localhost:3000', 'chrome-extension://']:
+        response.headers.add('Access-Control-Allow-Origin', origin)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
 import os
@@ -1266,7 +1269,7 @@ def add_enriched_column():
 
 @app.route('/debug-team')
 def debug_team():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
     
     # Get total count
@@ -1280,6 +1283,8 @@ def debug_team():
     conn.close()
     
     return jsonify({
+        'database_type': 'PostgreSQL' if os.getenv('DATABASE_URL') else 'SQLite',
+        'database_url_exists': bool(os.getenv('DATABASE_URL')),
         'total_count': total_count,
         'profiles_shown': len(all_profiles),
         'sample_profiles': all_profiles[:5]  # First 5 for debugging
@@ -1602,3 +1607,10 @@ system.start_all_active_feeds()
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)
+@app.route('/check-db-type')
+def check_db_type():
+    return jsonify({
+        'database_url_exists': bool(os.getenv('DATABASE_URL')),
+        'database_url': os.getenv('DATABASE_URL', 'Not set')[:50] + '...' if os.getenv('DATABASE_URL') else 'Not set',
+        'using_postgres': bool(os.getenv('DATABASE_URL'))
+    })

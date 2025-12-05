@@ -22,9 +22,11 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
+import os
+
 # Configuration
-OPENAI_KEY = "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"
-OLOSTEP_KEY = "olostep_eVoGjw6tc9d9T9cvVT4fEbSYgpTq9Sx3MQ3a"
+OPENAI_KEY = os.getenv('OPENAI_KEY', 'your-openai-key-here')
+OLOSTEP_KEY = os.getenv('OLOSTEP_KEY', 'your-olostep-key-here')
 COUNTRIES = ["singapore", "hongkong", "india", "malaysia", "thailand", "philippines", "vietnam", "indonesia"]
 GENERIC_KEYWORDS = ["real estate", "habit tracking", "expenses", "calory counter", "fitness", "education", "shopping", "travel", "food delivery", "dating"]
 

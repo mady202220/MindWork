@@ -51,9 +51,10 @@ class MultiRSSProposalSystem:
     def init_db(self):
         conn = self.get_db_connection()
         c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
         
         # Users table
-        if os.getenv('DATABASE_URL'):
+        if is_postgres:
             # PostgreSQL syntax
             c.execute('''CREATE TABLE IF NOT EXISTS users
                          (id SERIAL PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
@@ -63,7 +64,7 @@ class MultiRSSProposalSystem:
                          (id INTEGER PRIMARY KEY, email TEXT UNIQUE, password TEXT, active INTEGER DEFAULT 1)''')
         
         # Insert hardcoded user if not exists
-        if os.getenv('DATABASE_URL'):
+        if is_postgres:
             c.execute("SELECT COUNT(*) FROM users WHERE email = %s", ('madhuri.thakur@mindcrewtech.com',))
             if c.fetchone()[0] == 0:
                 c.execute("INSERT INTO users (email, password) VALUES (%s, %s)", 
@@ -75,7 +76,7 @@ class MultiRSSProposalSystem:
                          ('madhuri.thakur@mindcrewtech.com', 'mindcrew01'))
         
         # RSS Feeds table
-        if os.getenv('DATABASE_URL'):
+        if is_postgres:
             c.execute('''CREATE TABLE IF NOT EXISTS rss_feeds
                          (id SERIAL PRIMARY KEY, name TEXT, url TEXT, active INTEGER DEFAULT 1,
                           keyword_prompt TEXT, proposal_prompt TEXT, olostep_prompt TEXT)''')
@@ -85,23 +86,43 @@ class MultiRSSProposalSystem:
                           keyword_prompt TEXT, proposal_prompt TEXT, olostep_prompt TEXT)''')
         
         # Jobs table with RSS source
-        c.execute('''CREATE TABLE IF NOT EXISTS jobs
-                     (id TEXT PRIMARY KEY, title TEXT, description TEXT, url TEXT, 
-                      client TEXT, budget TEXT, posted_date TEXT, processed INTEGER DEFAULT 0,
-                      client_type TEXT, client_name TEXT, client_company TEXT, client_city TEXT, 
-                      client_country TEXT, linkedin_url TEXT, email TEXT, phone TEXT, 
-                      whatsapp TEXT, enriched INTEGER DEFAULT 0, decision_maker TEXT,
-                      skills TEXT, categories TEXT, hourly_rate TEXT, site TEXT, rss_source_id INTEGER)''')
+        if is_postgres:
+            c.execute('''CREATE TABLE IF NOT EXISTS jobs
+                         (id TEXT PRIMARY KEY, title TEXT, description TEXT, url TEXT, 
+                          client TEXT, budget TEXT, posted_date TEXT, processed INTEGER DEFAULT 0,
+                          client_type TEXT, client_name TEXT, client_company TEXT, client_city TEXT, 
+                          client_country TEXT, linkedin_url TEXT, email TEXT, phone TEXT, 
+                          whatsapp TEXT, enriched INTEGER DEFAULT 0, decision_maker TEXT,
+                          skills TEXT, categories TEXT, hourly_rate TEXT, site TEXT, rss_source_id INTEGER)''')
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS jobs
+                         (id TEXT PRIMARY KEY, title TEXT, description TEXT, url TEXT, 
+                          client TEXT, budget TEXT, posted_date TEXT, processed INTEGER DEFAULT 0,
+                          client_type TEXT, client_name TEXT, client_company TEXT, client_city TEXT, 
+                          client_country TEXT, linkedin_url TEXT, email TEXT, phone TEXT, 
+                          whatsapp TEXT, enriched INTEGER DEFAULT 0, decision_maker TEXT,
+                          skills TEXT, categories TEXT, hourly_rate TEXT, site TEXT, rss_source_id INTEGER)''')
         
-        c.execute('''CREATE TABLE IF NOT EXISTS proposals
-                     (id INTEGER PRIMARY KEY, job_id TEXT, proposal TEXT, 
-                      examples TEXT, created_at TEXT, debug_log TEXT, enrichment_author TEXT)''')
+        if is_postgres:
+            c.execute('''CREATE TABLE IF NOT EXISTS proposals
+                         (id SERIAL PRIMARY KEY, job_id TEXT, proposal TEXT, 
+                          examples TEXT, created_at TEXT, debug_log TEXT, enrichment_author TEXT)''')
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS proposals
+                         (id INTEGER PRIMARY KEY, job_id TEXT, proposal TEXT, 
+                          examples TEXT, created_at TEXT, debug_log TEXT, enrichment_author TEXT)''')
         
         # Team profiles table
-        c.execute('''CREATE TABLE IF NOT EXISTS team_profiles
-                     (id INTEGER PRIMARY KEY, name TEXT, title TEXT, skills TEXT, 
-                      description TEXT, profile_url TEXT, hourly_rate TEXT, 
-                      experience_years INTEGER, specialization TEXT, active INTEGER DEFAULT 1)''')
+        if is_postgres:
+            c.execute('''CREATE TABLE IF NOT EXISTS team_profiles
+                         (id SERIAL PRIMARY KEY, name TEXT, title TEXT, skills TEXT, 
+                          description TEXT, profile_url TEXT, hourly_rate TEXT, 
+                          experience_years INTEGER, specialization TEXT, active INTEGER DEFAULT 1)''')
+        else:
+            c.execute('''CREATE TABLE IF NOT EXISTS team_profiles
+                         (id INTEGER PRIMARY KEY, name TEXT, title TEXT, skills TEXT, 
+                          description TEXT, profile_url TEXT, hourly_rate TEXT, 
+                          experience_years INTEGER, specialization TEXT, active INTEGER DEFAULT 1)''')        
         
         # Add missing columns to existing jobs table if they don't exist
         columns_to_add = [
@@ -132,7 +153,7 @@ class MultiRSSProposalSystem:
         # Insert team profiles from CSV data if none exists
         c.execute("SELECT COUNT(*) FROM team_profiles")
         if c.fetchone()[0] == 0:
-            self.import_team_profiles(c)
+            self.import_team_profiles(c, is_postgres)
         
         # Insert default RSS feeds if none exists
         c.execute("SELECT COUNT(*) FROM rss_feeds")
@@ -182,17 +203,30 @@ class MultiRSSProposalSystem:
             """
             
             # Insert default RSS feeds
-            c.execute("""INSERT INTO rss_feeds 
-                        (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
-                        VALUES (?, ?, ?, ?, ?)""",
-                     ("Web Development", "https://www.vollna.com/rss/Xnd57USkgSJf2jAewZTD",
-                      default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
-            
-            c.execute("""INSERT INTO rss_feeds 
-                        (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
-                        VALUES (?, ?, ?, ?, ?)""",
-                     ("Manual Jobs", "manual://jobs",
-                      default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
+            if is_postgres:
+                c.execute("""INSERT INTO rss_feeds 
+                            (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                            VALUES (%s, %s, %s, %s, %s)""",
+                         ("Web Development", "https://www.vollna.com/rss/Xnd57USkgSJf2jAewZTD",
+                          default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
+                
+                c.execute("""INSERT INTO rss_feeds 
+                            (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                            VALUES (%s, %s, %s, %s, %s)""",
+                         ("Manual Jobs", "manual://jobs",
+                          default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
+            else:
+                c.execute("""INSERT INTO rss_feeds 
+                            (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                            VALUES (?, ?, ?, ?, ?)""",
+                         ("Web Development", "https://www.vollna.com/rss/Xnd57USkgSJf2jAewZTD",
+                          default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
+                
+                c.execute("""INSERT INTO rss_feeds 
+                            (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                            VALUES (?, ?, ?, ?, ?)""",
+                         ("Manual Jobs", "manual://jobs",
+                          default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
         
         conn.commit()
         conn.close()
@@ -208,7 +242,10 @@ class MultiRSSProposalSystem:
     def get_jobs_by_rss(self, rss_id):
         conn = self.get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM jobs WHERE rss_source_id = ? AND enriched != 1 ORDER BY posted_date DESC", (rss_id,))
+        if os.getenv('DATABASE_URL'):
+            c.execute("SELECT * FROM jobs WHERE rss_source_id = %s AND enriched != 1 ORDER BY posted_date DESC", (rss_id,))
+        else:
+            c.execute("SELECT * FROM jobs WHERE rss_source_id = ? AND enriched != 1 ORDER BY posted_date DESC", (rss_id,))
         jobs = c.fetchall()
         conn.close()
         return jobs
@@ -310,9 +347,12 @@ class MultiRSSProposalSystem:
         debug_log = []
         try:
             # Get custom prompt for this RSS feed
-            conn = sqlite3.connect('proposals.db')
+            conn = self.get_db_connection()
             c = conn.cursor()
-            c.execute("SELECT keyword_prompt FROM rss_feeds WHERE id = ?", (rss_id,))
+            if os.getenv('DATABASE_URL'):
+                c.execute("SELECT keyword_prompt FROM rss_feeds WHERE id = %s", (rss_id,))
+            else:
+                c.execute("SELECT keyword_prompt FROM rss_feeds WHERE id = ?", (rss_id,))
             prompt_template = c.fetchone()[0]
             conn.close()
             
@@ -340,9 +380,12 @@ class MultiRSSProposalSystem:
         debug_log = []
         
         # Get custom prompt for this RSS feed
-        conn = sqlite3.connect('proposals.db')
+        conn = self.get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT proposal_prompt FROM rss_feeds WHERE id = ?", (rss_id,))
+        if os.getenv('DATABASE_URL'):
+            c.execute("SELECT proposal_prompt FROM rss_feeds WHERE id = %s", (rss_id,))
+        else:
+            c.execute("SELECT proposal_prompt FROM rss_feeds WHERE id = ?", (rss_id,))
         prompt_template = c.fetchone()[0]
         conn.close()
         
@@ -471,7 +514,7 @@ class MultiRSSProposalSystem:
         
         return examples[:10]  # Return up to 10 apps
     
-    def import_team_profiles(self, cursor):
+    def import_team_profiles(self, cursor, is_postgres=False):
         """Import team profiles from CSV data"""
         profiles = [
             ("Sachin M.", "Full Stack Developer | Senior .Net Developer", "MySQL, Web Application, CMS Framework, ASP.NET, .NET Framework, .NET Compact Framework, .NET Core", "Strong experience in system analysis, architecture, development, object-oriented design, system integration and leadership. Proficient with the Microsoft .NET Framework, PHP, Android, DynamicAX, PowerBI and SQL development.", "https://www.upwork.com/freelancers/~015184bacbca7a5bfb/", "$25-50/hr", 6, ".NET Development"),
@@ -487,9 +530,14 @@ class MultiRSSProposalSystem:
         ]
         
         for profile in profiles:
-            cursor.execute("""INSERT INTO team_profiles 
-                            (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", profile)
+            if is_postgres:
+                cursor.execute("""INSERT INTO team_profiles 
+                                (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""", profile)
+            else:
+                cursor.execute("""INSERT INTO team_profiles 
+                                (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", profile)
     
     def get_team_profiles(self):
         conn = self.get_db_connection()

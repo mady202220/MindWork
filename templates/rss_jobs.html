@@ -15,6 +15,12 @@
         .examples { background: white; padding: 20px; margin: 12px 0; border-left: 4px solid var(--primary); border-radius: 8px; }
         .debug-section { background: var(--bg-tertiary); padding: 16px; margin: 12px 0; border-radius: 8px; border-left: 4px solid var(--text-tertiary); }
         .edit-fields { display: none; background: var(--bg-tertiary); padding: 16px; margin: 12px 0; border-radius: 8px; }
+        .enrichment-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .enrichment-form .form-group { margin: 0; }
+        .enrichment-form .form-group.full-width { grid-column: 1 / -1; }
+        .enrichment-form input, .enrichment-form select { width: 100%; padding: 12px; border: 2px solid var(--border-light); border-radius: 8px; font-size: 14px; }
+        .enrichment-form input:focus, .enrichment-form select:focus { outline: none; border-color: var(--primary); }
+        .enrichment-form label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-primary); }
         .stats { display: flex; gap: 20px; margin-bottom: 24px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: var(--shadow-sm); }
         .stat-card h3 { color: var(--primary); font-size: 28px; margin: 0 0 8px 0; }
@@ -133,26 +139,28 @@
                         <button class="btn btn-success" onclick="updateEnrichment('{{ job[0] }}')">Save Changes</button>
                     </div>
                 {% else %}
-                    <div class="form-group">
-                        <input type="text" id="client-company-{{ job[0] }}" placeholder="Company Name">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="client-name-{{ job[0] }}" placeholder="Person Name">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="client-city-{{ job[0] }}" placeholder="City">
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="client-country-{{ job[0] }}" placeholder="Country">
-                    </div>
-                    <div class="form-group">
-                        <label for="enrichment-author-{{ job[0] }}">Added by:</label>
-                        <select id="enrichment-author-{{ job[0] }}">
-                            <option value="Ashish">Ashish</option>
-                            <option value="Saloni">Saloni</option>
-                            <option value="Madhuri">Madhuri</option>
-                            <option value="Mehul">Mehul</option>
-                        </select>
+                    <div class="enrichment-form">
+                        <div class="form-group">
+                            <input type="text" id="client-company-{{ job[0] }}" placeholder="Company Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="client-name-{{ job[0] }}" placeholder="Person Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="client-city-{{ job[0] }}" placeholder="City">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="client-country-{{ job[0] }}" placeholder="Country">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="enrichment-author-{{ job[0] }}">Added by:</label>
+                            <select id="enrichment-author-{{ job[0] }}">
+                                <option value="Ashish">Ashish</option>
+                                <option value="Saloni">Saloni</option>
+                                <option value="Madhuri">Madhuri</option>
+                                <option value="Mehul">Mehul</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <button class="btn btn-warning" onclick="enrichClient('{{ job[0] }}', {{ current_feed[0] }})">🔍 Enrich Client (2-5 min)</button>

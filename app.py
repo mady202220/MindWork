@@ -1043,9 +1043,12 @@ def check_job():
     data = request.json
     job_url = data.get('url')
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT id FROM jobs WHERE url = ?", (job_url,))
+    if os.getenv('DATABASE_URL'):
+        c.execute("SELECT id FROM jobs WHERE url = %s", (job_url,))
+    else:
+        c.execute("SELECT id FROM jobs WHERE url = ?", (job_url,))
     result = c.fetchone()
     conn.close()
     
@@ -1087,26 +1090,41 @@ def create_job():
     job_id = hashlib.md5(data['url'].encode()).hexdigest()
     
     try:
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
         
         # Use provided RSS ID or default to Manual Jobs
         rss_id = data.get('rss_id')
         if not rss_id:
-            c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs' LIMIT 1")
+            if is_postgres:
+                c.execute("SELECT id FROM rss_feeds WHERE name = %s LIMIT 1", ('Manual Jobs',))
+            else:
+                c.execute("SELECT id FROM rss_feeds WHERE name = ? LIMIT 1", ('Manual Jobs',))
             result = c.fetchone()
             if result:
                 rss_id = result[0]
         
-        c.execute("""INSERT INTO jobs 
-                    (id, title, description, url, client, budget, posted_date, 
-                     hourly_rate, skills, categories, rss_source_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                 (job_id, data.get('title', ''), data.get('description', ''), 
-                  data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
-                  data.get('posted_date', datetime.now().isoformat()), 
-                  data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
-                  data.get('categories', 'Not specified'), rss_id))
+        if is_postgres:
+            c.execute("""INSERT INTO jobs 
+                        (id, title, description, url, client, budget, posted_date, 
+                         hourly_rate, skills, categories, rss_source_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                     (job_id, data.get('title', ''), data.get('description', ''), 
+                      data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
+                      data.get('posted_date', datetime.now().isoformat()), 
+                      data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
+                      data.get('categories', 'Not specified'), rss_id))
+        else:
+            c.execute("""INSERT INTO jobs 
+                        (id, title, description, url, client, budget, posted_date, 
+                         hourly_rate, skills, categories, rss_source_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                     (job_id, data.get('title', ''), data.get('description', ''), 
+                      data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
+                      data.get('posted_date', datetime.now().isoformat()), 
+                      data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
+                      data.get('categories', 'Not specified'), rss_id))
         
         conn.commit()
         conn.close()

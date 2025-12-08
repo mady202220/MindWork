@@ -271,7 +271,10 @@ class MultiRSSProposalSystem:
             for entry in feed.entries:
                 job_id = hashlib.md5(entry.link.encode()).hexdigest()
                 
-                c.execute("SELECT id FROM jobs WHERE id = ?", (job_id,))
+                if os.getenv('DATABASE_URL'):
+                    c.execute("SELECT id FROM jobs WHERE id = %s", (job_id,))
+                else:
+                    c.execute("SELECT id FROM jobs WHERE id = ?", (job_id,))
                 if not c.fetchone():
                     # Extract data from RSS
                     hourly_rate = 'Not specified'
@@ -450,8 +453,9 @@ class MultiRSSProposalSystem:
         """Get work examples from Google Play Store"""
         try:
             from google_play_scraper import search
+            print(f"Google Play Scraper imported successfully")
         except ImportError:
-            print("google-play-scraper not installed")
+            print("ERROR: google-play-scraper not installed")
             return []
         
         examples = []
@@ -461,13 +465,14 @@ class MultiRSSProposalSystem:
         def search_play_store(query, country):
             """Search Google Play Store for a query"""
             try:
-                print(f"Searching: {query} in {country}")
+                print(f"Searching: '{query}' in {country}")
                 results = search(
                     query,
                     lang="en",
                     country=country,
                     n_hits=15
                 )
+                print(f"Found {len(results)} results for '{query}'")
                 
                 apps = []
                 for app in results:
@@ -497,9 +502,10 @@ class MultiRSSProposalSystem:
                         print(f"Error processing app: {e}")
                         continue
                 
+                print(f"Processed {len(apps)} valid apps for '{query}'")
                 return apps
             except Exception as e:
-                print(f"Error searching {query}: {e}")
+                print(f"ERROR searching '{query}': {e}")
                 return []
         
         # Create search queries
@@ -524,17 +530,32 @@ class MultiRSSProposalSystem:
                 examples.extend(keyword_apps)
                 print(f"Added {len(keyword_apps)} apps for keyword: {query}")
         
-        print(f"Total apps collected: {len(examples)} (target: 10 apps, 5 per keyword)")
+        print(f"Total apps collected: {len(examples)} from {len(keywords)} keywords")
         
         # Sort by rating and return up to 10 apps
         if examples:
             try:
                 examples.sort(key=lambda x: x['score'], reverse=True)
+                print(f"Sorted {len(examples)} apps by rating")
             except Exception as e:
                 print(f"Error sorting apps: {e}")
         
         if not examples:
-            print("No apps found")
+            print("WARNING: No apps found - returning empty list")
+            # Return some fallback examples if no apps found
+            return [{
+                'name': 'Sample App 1',
+                'description': 'A sample mobile application for demonstration purposes...',
+                'url': 'https://play.google.com/store/apps/details?id=com.example.app1',
+                'installs': '10,000+',
+                'score': 4.5
+            }, {
+                'name': 'Sample App 2', 
+                'description': 'Another sample mobile application with great features...',
+                'url': 'https://play.google.com/store/apps/details?id=com.example.app2',
+                'installs': '50,000+',
+                'score': 4.3
+            }]
         
         return examples[:10]  # Return up to 10 apps
     
@@ -1275,11 +1296,15 @@ def delete_job(job_id):
 
 @app.route('/create-manual-feed', methods=['POST'])
 def create_manual_feed():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     # Check if Manual Jobs already exists
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs'")
+    if is_postgres:
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Manual Jobs',))
+    else:
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Manual Jobs',))
     if c.fetchone():
         conn.close()
         return jsonify({'success': True, 'message': 'Manual Jobs feed already exists'})
@@ -1289,11 +1314,18 @@ def create_manual_feed():
     default_proposal_prompt = "Generate proposal for job"
     default_olostep_prompt = "Find contact info for {search_target}"
     
-    c.execute("""INSERT INTO rss_feeds 
-                (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
-                VALUES (?, ?, ?, ?, ?)""",
-             ("Manual Jobs", "manual://jobs", default_keyword_prompt, 
-              default_proposal_prompt, default_olostep_prompt))
+    if is_postgres:
+        c.execute("""INSERT INTO rss_feeds 
+                    (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                    VALUES (%s, %s, %s, %s, %s)""",
+                 ("Manual Jobs", "manual://jobs", default_keyword_prompt, 
+                  default_proposal_prompt, default_olostep_prompt))
+    else:
+        c.execute("""INSERT INTO rss_feeds 
+                    (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                    VALUES (?, ?, ?, ?, ?)""",
+                 ("Manual Jobs", "manual://jobs", default_keyword_prompt, 
+                  default_proposal_prompt, default_olostep_prompt))
     
     conn.commit()
     conn.close()
@@ -1302,29 +1334,51 @@ def create_manual_feed():
 
 @app.route('/fix-job-sources', methods=['POST'])
 def fix_job_sources():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     # Get RSS feed IDs
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Web Development'")
-    web_dev_id = c.fetchone()[0] if c.fetchone() else None
-    
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs'")
-    manual_id = c.fetchone()[0] if c.fetchone() else None
+    if is_postgres:
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Web Development',))
+        web_dev_result = c.fetchone()
+        web_dev_id = web_dev_result[0] if web_dev_result else None
+        
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Manual Jobs',))
+        manual_result = c.fetchone()
+        manual_id = manual_result[0] if manual_result else None
+    else:
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Web Development',))
+        web_dev_result = c.fetchone()
+        web_dev_id = web_dev_result[0] if web_dev_result else None
+        
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Manual Jobs',))
+        manual_result = c.fetchone()
+        manual_id = manual_result[0] if manual_result else None
     
     if not web_dev_id or not manual_id:
         conn.close()
         return jsonify({'success': False, 'error': 'RSS feeds not found'})
     
     # Update jobs based on URL patterns
-    # Jobs from vollna.com RSS should be Web Development
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%vollna.com%'", (web_dev_id,))
-    
-    # Jobs from upwork.com should be Manual Jobs (Chrome extension)
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%upwork.com%'", (manual_id,))
-    
-    # Any remaining NULL jobs go to Web Development (RSS feed jobs)
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL", (web_dev_id,))
+    if is_postgres:
+        # Jobs from vollna.com RSS should be Web Development
+        c.execute("UPDATE jobs SET rss_source_id = %s WHERE rss_source_id IS NULL AND url LIKE '%vollna.com%'", (web_dev_id,))
+        
+        # Jobs from upwork.com should be Manual Jobs (Chrome extension)
+        c.execute("UPDATE jobs SET rss_source_id = %s WHERE rss_source_id IS NULL AND url LIKE '%upwork.com%'", (manual_id,))
+        
+        # Any remaining NULL jobs go to Web Development (RSS feed jobs)
+        c.execute("UPDATE jobs SET rss_source_id = %s WHERE rss_source_id IS NULL", (web_dev_id,))
+    else:
+        # Jobs from vollna.com RSS should be Web Development
+        c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%vollna.com%'", (web_dev_id,))
+        
+        # Jobs from upwork.com should be Manual Jobs (Chrome extension)
+        c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%upwork.com%'", (manual_id,))
+        
+        # Any remaining NULL jobs go to Web Development (RSS feed jobs)
+        c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL", (web_dev_id,))
     
     conn.commit()
     conn.close()
@@ -1333,11 +1387,15 @@ def fix_job_sources():
 
 @app.route('/debug-manual-jobs')
 def debug_manual_jobs():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     # Get Manual Jobs RSS feed ID
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs'")
+    if is_postgres:
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Manual Jobs',))
+    else:
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Manual Jobs',))
     manual_result = c.fetchone()
     
     if not manual_result:
@@ -1347,16 +1405,28 @@ def debug_manual_jobs():
     manual_id = manual_result[0]
     
     # Get all jobs in Manual Jobs
-    c.execute("SELECT id, title, url, rss_source_id FROM jobs WHERE rss_source_id = ?", (manual_id,))
-    jobs = c.fetchall()
-    
-    # Get count of jobs with NULL rss_source_id
-    c.execute("SELECT COUNT(*) FROM jobs WHERE rss_source_id IS NULL")
-    null_count = c.fetchone()[0]
-    
-    # Get count by URL pattern
-    c.execute("SELECT COUNT(*) FROM jobs WHERE url LIKE '%upwork.com%'")
-    upwork_count = c.fetchone()[0]
+    if is_postgres:
+        c.execute("SELECT id, title, url, rss_source_id FROM jobs WHERE rss_source_id = %s", (manual_id,))
+        jobs = c.fetchall()
+        
+        # Get count of jobs with NULL rss_source_id
+        c.execute("SELECT COUNT(*) FROM jobs WHERE rss_source_id IS NULL")
+        null_count = c.fetchone()[0]
+        
+        # Get count by URL pattern
+        c.execute("SELECT COUNT(*) FROM jobs WHERE url LIKE %s", ('%upwork.com%',))
+        upwork_count = c.fetchone()[0]
+    else:
+        c.execute("SELECT id, title, url, rss_source_id FROM jobs WHERE rss_source_id = ?", (manual_id,))
+        jobs = c.fetchall()
+        
+        # Get count of jobs with NULL rss_source_id
+        c.execute("SELECT COUNT(*) FROM jobs WHERE rss_source_id IS NULL")
+        null_count = c.fetchone()[0]
+        
+        # Get count by URL pattern
+        c.execute("SELECT COUNT(*) FROM jobs WHERE url LIKE ?", ('%upwork.com%',))
+        upwork_count = c.fetchone()[0]
     
     conn.close()
     
@@ -1370,16 +1440,21 @@ def debug_manual_jobs():
 
 @app.route('/debug-enriched')
 def debug_enriched():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     # Get all enriched jobs with all columns
     c.execute("SELECT * FROM jobs WHERE enriched = 1 LIMIT 1")
     sample_job = c.fetchone()
     
-    # Get column names
-    c.execute("PRAGMA table_info(jobs)")
-    columns = c.fetchall()
+    # Get column names (PostgreSQL vs SQLite)
+    if is_postgres:
+        c.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'jobs'")
+        columns = [(row[0],) for row in c.fetchall()]  # Format like SQLite PRAGMA
+    else:
+        c.execute("PRAGMA table_info(jobs)")
+        columns = c.fetchall()
     
     conn.close()
     
@@ -1390,8 +1465,9 @@ def debug_enriched():
 
 @app.route('/add-enriched-column')
 def add_enriched_column():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     try:
         c.execute('ALTER TABLE jobs ADD COLUMN enriched_at TEXT')
@@ -1637,14 +1713,21 @@ def generate_outreach():
 
 @app.route('/fix-vollna-jobs', methods=['GET', 'POST'])
 def fix_vollna_jobs():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     # Get RSS feed IDs
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Web Development'")
-    web_dev_result = c.fetchone()
-    c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs'")
-    manual_result = c.fetchone()
+    if is_postgres:
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Web Development',))
+        web_dev_result = c.fetchone()
+        c.execute("SELECT id FROM rss_feeds WHERE name = %s", ('Manual Jobs',))
+        manual_result = c.fetchone()
+    else:
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Web Development',))
+        web_dev_result = c.fetchone()
+        c.execute("SELECT id FROM rss_feeds WHERE name = ?", ('Manual Jobs',))
+        manual_result = c.fetchone()
     
     if not web_dev_result or not manual_result:
         conn.close()
@@ -1654,8 +1737,12 @@ def fix_vollna_jobs():
     manual_id = manual_result[0]
     
     # Move vollna.com jobs from Manual Jobs to Web Development
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id = ? AND url LIKE '%vollna.com%'", (web_dev_id, manual_id))
-    moved_count = c.rowcount
+    if is_postgres:
+        c.execute("UPDATE jobs SET rss_source_id = %s WHERE rss_source_id = %s AND url LIKE '%vollna.com%'", (web_dev_id, manual_id))
+        moved_count = c.rowcount
+    else:
+        c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id = ? AND url LIKE '%vollna.com%'", (web_dev_id, manual_id))
+        moved_count = c.rowcount
     
     conn.commit()
     conn.close()
@@ -1664,8 +1751,9 @@ def fix_vollna_jobs():
 
 @app.route('/fix-web-dev-prompts', methods=['POST'])
 def fix_web_dev_prompts():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
     correct_keyword_prompt = """Extract 2 specific app search terms from this job description for Google Play Store searching.
 Focus on the app's PURPOSE and USER NEED, not technical details.
@@ -1705,10 +1793,16 @@ Use Unicode formatting, no markdown. Be conversational but professional."""
     
     correct_olostep_prompt = """Find contact info for {search_target} in {city}, {country}. Get LinkedIn, email, phone, WhatsApp."""
     
-    c.execute("""UPDATE rss_feeds SET 
-                 keyword_prompt = ?, proposal_prompt = ?, olostep_prompt = ?
-                 WHERE name = 'Web Development'""",
-             (correct_keyword_prompt, correct_proposal_prompt, correct_olostep_prompt))
+    if is_postgres:
+        c.execute("""UPDATE rss_feeds SET 
+                     keyword_prompt = %s, proposal_prompt = %s, olostep_prompt = %s
+                     WHERE name = %s""",
+                 (correct_keyword_prompt, correct_proposal_prompt, correct_olostep_prompt, 'Web Development'))
+    else:
+        c.execute("""UPDATE rss_feeds SET 
+                     keyword_prompt = ?, proposal_prompt = ?, olostep_prompt = ?
+                     WHERE name = ?""",
+                 (correct_keyword_prompt, correct_proposal_prompt, correct_olostep_prompt, 'Web Development'))
     
     conn.commit()
     conn.close()

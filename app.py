@@ -1351,8 +1351,9 @@ Rohit M.,Mobile App Developer | iOS | Android | WatchOS | Apple watch,"API Integ
 Neha N.,"React, React Native, Flutter & Nodejs Developer | 6+ Years | AI Expert","React Native, React, Node.js, AI Platform, JavaScript, TypeScript, Amazon Web Services, ExpressJS, GraphQL, Next.js, Map Integration, Expo.io, MongoDB, Flutter, FlutterFlow","Full-stack developer passionate about creating exceptional digital and AI-powered solutions with 6+ years experience.",https://www.upwork.com/freelancers/~0178d79e42e2a4e8c0/'''
     
     try:
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
         
         # Clear existing profiles first
         c.execute("DELETE FROM team_profiles")
@@ -1412,11 +1413,18 @@ Neha N.,"React, React Native, Flutter & Nodejs Developer | 6+ Years | AI Expert"
                 else:
                     specialization = 'Full Stack Development'
                 
-                c.execute("""INSERT INTO team_profiles 
-                            (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                         (row['names'], row['titles'], row['skills'], row['description'][:500], 
-                          row['Profile_URL'], hourly_rate, experience_years, specialization, 1))
+                if is_postgres:
+                    c.execute("""INSERT INTO team_profiles 
+                                (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                             (row['names'], row['titles'], row['skills'], row['description'][:500], 
+                              row['Profile_URL'], hourly_rate, experience_years, specialization, 1))
+                else:
+                    c.execute("""INSERT INTO team_profiles 
+                                (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                             (row['names'], row['titles'], row['skills'], row['description'][:500], 
+                              row['Profile_URL'], hourly_rate, experience_years, specialization, 1))
                 imported_count += 1
         
         # Get final count before closing

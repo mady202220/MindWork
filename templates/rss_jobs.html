@@ -95,41 +95,50 @@
                     {% if job[17] == 1 %}<span style="color: blue;">🔍 Enriched</span>{% endif %}
                 </div>
             </div>
-            <div class="job-description">{{ job[2][:300] }}...</div>
-            <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">View Job</a>
-            <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
-            <button class="btn" style="background: #e74c3c; color: white;" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
+            <div class="job-description">{{ job[2][:200] }}...</div>
             
-            <!-- Job Status Section -->
-            <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--secondary-purple);">
-                <h4 style="margin: 0 0 12px 0; color: var(--gray-900);">📋 Job Status</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700);">Proposal Status:</label>
-                        <select id="job-proposal-status-{{ job[0] }}" style="width: 100%; padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
-                            <option value="Not Submitted">Not Submitted</option>
-                            <option value="Saved">Saved</option>
-                            <option value="Submitted">Submitted</option>
-                            <option value="Proposal Viewed">Proposal Viewed</option>
-                            <option value="Message Received">Message Received</option>
-                            <option value="Absconding">Absconding</option>
-                            <option value="Lost">Lost</option>
-                            <option value="Won">Won</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700);">Submitted By:</label>
-                        <select id="job-submitted-by-{{ job[0] }}" style="width: 100%; padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
-                            <option value="">Not Selected</option>
-                            <option value="Ashish">Ashish</option>
-                            <option value="Madhuri">Madhuri</option>
-                        </select>
-                    </div>
+            <!-- Main Actions -->
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; align-items: center;">
+                <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
+                
+                <!-- Job Status Dropdowns -->
+                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;">
+                    <option value="Not Submitted">Not Submitted</option>
+                    <option value="Saved">Saved</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Proposal Viewed">Proposal Viewed</option>
+                    <option value="Message Received">Message Received</option>
+                    <option value="Absconding">Absconding</option>
+                    <option value="Lost">Lost</option>
+                    <option value="Won">Won</option>
+                </select>
+                
+                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;">
+                    <option value="">Not Selected</option>
+                    <option value="Ashish">Ashish</option>
+                    <option value="Madhuri">Madhuri</option>
+                </select>
+                
+                <button class="btn btn-primary btn-sm" onclick="updateJobStatus('{{ job[0] }}')">💾 Save</button>
+                
+                <!-- Action Menu -->
+                <div style="margin-left: auto;">
+                    <button class="btn btn-outline btn-sm" onclick="toggleActions('{{ job[0] }}')" style="padding: 6px 12px;">
+                        ⚙️ Actions ▼
+                    </button>
                 </div>
-                <button class="btn btn-primary" style="margin-top: 12px;" onclick="updateJobStatus('{{ job[0] }}')">💾 Save Status</button>
             </div>
             
-            <!-- Client Enrichment Section -->
+            <!-- Collapsible Actions -->
+            <div id="actions-{{ job[0] }}" style="display: none; margin-top: 12px; padding: 16px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--primary-blue);">
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                    <a href="{{ job[3] }}" target="_blank" class="btn btn-primary btn-sm">View Job</a>
+                    <button class="btn btn-danger btn-sm" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
+                </div>
+            </div>
+            
+            <!-- Client Enrichment Section (Collapsible) -->
+            <div id="enrichment-toggle-{{ job[0] }}" style="display: none;">
             <div class="enrichment-section">
                 <h4>🔍 Client Enrichment</h4>
                 {% if job[17] == 1 %}
@@ -196,6 +205,7 @@
                 {% endif %}
                 
                 <div id="enrichment-results-{{ job[0] }}" style="display: none;"></div>
+            </div>
             </div>
             
             <div id="proposal-{{ job[0] }}" class="proposal-section" style="display: none;">
@@ -439,6 +449,19 @@
         
         updateStats();
         setInterval(() => location.reload(), 600000);
+        
+        function toggleActions(jobId) {
+            const actionsDiv = document.getElementById(`actions-${jobId}`);
+            const enrichmentDiv = document.getElementById(`enrichment-toggle-${jobId}`);
+            
+            if (actionsDiv.style.display === 'none') {
+                actionsDiv.style.display = 'block';
+                enrichmentDiv.style.display = 'block';
+            } else {
+                actionsDiv.style.display = 'none';
+                enrichmentDiv.style.display = 'none';
+            }
+        }
         
         function updateJobStatus(jobId) {
             const proposalStatus = document.getElementById(`job-proposal-status-${jobId}`).value;

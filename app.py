@@ -1607,9 +1607,6 @@ conn.close()
 # Start all active RSS feeds
 system.start_all_active_feeds()
 
-if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)
 @app.route('/check-db-type')
 def check_db_type():
     return jsonify({
@@ -1617,3 +1614,7 @@ def check_db_type():
         'database_url': os.getenv('DATABASE_URL', 'Not set')[:50] + '...' if os.getenv('DATABASE_URL') else 'Not set',
         'using_postgres': bool(os.getenv('DATABASE_URL'))
     })
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port, use_reloader=False)

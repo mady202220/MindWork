@@ -264,8 +264,9 @@ class MultiRSSProposalSystem:
             feed = feedparser.parse(rss_url)
             new_jobs = 0
             
-            conn = sqlite3.connect('proposals.db')
+            conn = self.get_db_connection()
             c = conn.cursor()
+            is_postgres = os.getenv('DATABASE_URL') is not None
             
             for entry in feed.entries:
                 job_id = hashlib.md5(entry.link.encode()).hexdigest()
@@ -300,15 +301,26 @@ class MultiRSSProposalSystem:
                     
                     print(f"RSS Job extracted - Skills: {skills}, Categories: {categories}, Description length: {len(description)}")
                     
-                    c.execute("""INSERT INTO jobs 
-                                (id, title, description, url, client, budget, posted_date, 
-                                 hourly_rate, skills, categories, rss_source_id)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                             (job_id, entry.title, description, entry.link,
-                              entry.get('author', 'Unknown'), 
-                              entry.get('budget', 'Not specified'),
-                              entry.get('published', datetime.now().isoformat()),
-                              hourly_rate, skills, categories, rss_id))
+                    if is_postgres:
+                        c.execute("""INSERT INTO jobs 
+                                    (id, title, description, url, client, budget, posted_date, 
+                                     hourly_rate, skills, categories, rss_source_id)
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                                 (job_id, entry.title, description, entry.link,
+                                  entry.get('author', 'Unknown'), 
+                                  entry.get('budget', 'Not specified'),
+                                  entry.get('published', datetime.now().isoformat()),
+                                  hourly_rate, skills, categories, rss_id))
+                    else:
+                        c.execute("""INSERT INTO jobs 
+                                    (id, title, description, url, client, budget, posted_date, 
+                                     hourly_rate, skills, categories, rss_source_id)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                 (job_id, entry.title, description, entry.link,
+                                  entry.get('author', 'Unknown'), 
+                                  entry.get('budget', 'Not specified'),
+                                  entry.get('published', datetime.now().isoformat()),
+                                  hourly_rate, skills, categories, rss_id))
                     new_jobs += 1
             
             conn.commit()
@@ -323,9 +335,12 @@ class MultiRSSProposalSystem:
             while True:
                 try:
                     # Check if feed is still active
-                    conn = sqlite3.connect('proposals.db')
+                    conn = self.get_db_connection()
                     c = conn.cursor()
-                    c.execute("SELECT active FROM rss_feeds WHERE id = ?", (rss_id,))
+                    if os.getenv('DATABASE_URL'):
+                        c.execute("SELECT active FROM rss_feeds WHERE id = %s", (rss_id,))
+                    else:
+                        c.execute("SELECT active FROM rss_feeds WHERE id = ?", (rss_id,))
                     result = c.fetchone()
                     conn.close()
                     
@@ -739,13 +754,23 @@ def update_profile(profile_id):
 def add_rss():
     data = request.json
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("""INSERT INTO rss_feeds (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
-                 VALUES (?, ?, ?, ?, ?)""",
-             (data['name'], data['url'], data['keyword_prompt'], 
-              data['proposal_prompt'], data['olostep_prompt']))
-    rss_id = c.lastrowid
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    if is_postgres:
+        c.execute("""INSERT INTO rss_feeds (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                     VALUES (%s, %s, %s, %s, %s) RETURNING id""",
+                 (data['name'], data['url'], data['keyword_prompt'], 
+                  data['proposal_prompt'], data['olostep_prompt']))
+        rss_id = c.fetchone()[0]
+    else:
+        c.execute("""INSERT INTO rss_feeds (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
+                     VALUES (?, ?, ?, ?, ?)""",
+                 (data['name'], data['url'], data['keyword_prompt'], 
+                  data['proposal_prompt'], data['olostep_prompt']))
+        rss_id = c.lastrowid
+    
     conn.commit()
     conn.close()
     

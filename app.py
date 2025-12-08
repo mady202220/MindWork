@@ -150,7 +150,8 @@ class MultiRSSProposalSystem:
         for column in columns_to_add:
             try:
                 c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
-            except:
+            except Exception as e:
+                conn.rollback()  # Rollback failed transaction
                 pass  # Column already exists
         
         # Insert team profiles from CSV data if none exists

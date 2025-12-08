@@ -389,9 +389,9 @@ class MultiRSSProposalSystem:
             debug_log.append("Calling OpenAI for keyword extraction...")
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=30
+                max_tokens=50
             )
             keywords = response.choices[0].message.content.strip().split(',')
             result = [k.strip() for k in keywords[:2]]
@@ -438,9 +438,9 @@ class MultiRSSProposalSystem:
         try:
             debug_log.append("Calling OpenAI for proposal generation...")
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=800
+                max_tokens=1000
             )
             proposal = response.choices[0].message.content.strip()
             debug_log.append("Proposal generated successfully")
@@ -1060,23 +1060,23 @@ def enrich_client():
                         client_name = %s, client_company = %s, 
                         client_city = %s, client_country = %s, linkedin_url = %s, 
                         email = %s, phone = %s, whatsapp = %s, enriched = 1,
-                        decision_maker = %s, enriched_at = %s
+                        decision_maker = %s
                         WHERE id = %s""",
                      (final_person_name, final_company_name, 
                       city, country, result.get('linkedin', ''), 
                       result.get('email', ''), result.get('phone', ''), 
-                      result.get('whatsapp', ''), search_target, datetime.now().isoformat(), job_id))
+                      result.get('whatsapp', ''), search_target, job_id))
         else:
             c.execute("""UPDATE jobs SET 
                         client_name = ?, client_company = ?, 
                         client_city = ?, client_country = ?, linkedin_url = ?, 
                         email = ?, phone = ?, whatsapp = ?, enriched = 1,
-                        decision_maker = ?, enriched_at = ?
+                        decision_maker = ?
                         WHERE id = ?""",
                      (final_person_name, final_company_name, 
                       city, country, result.get('linkedin', ''), 
                       result.get('email', ''), result.get('phone', ''), 
-                      result.get('whatsapp', ''), search_target, datetime.now().isoformat(), job_id))
+                      result.get('whatsapp', ''), search_target, job_id))
         
         conn.commit()
         conn.close()
@@ -1661,9 +1661,9 @@ def generate_outreach():
             full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a brief, friendly WhatsApp message:"
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": full_prompt}],
-                max_tokens=200
+                max_tokens=250
             )
             message = response.choices[0].message.content.strip()
             return jsonify({'success': True, 'message': message})
@@ -1672,9 +1672,9 @@ def generate_outreach():
             full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional LinkedIn message:"
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": full_prompt}],
-                max_tokens=300
+                max_tokens=400
             )
             message = response.choices[0].message.content.strip()
             return jsonify({'success': True, 'message': message})
@@ -1687,9 +1687,9 @@ def generate_outreach():
             email_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional email body:"
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=400
+                max_tokens=500
             )
             email_body = response.choices[0].message.content.strip()
             
@@ -1697,9 +1697,9 @@ def generate_outreach():
             followup_prompt = f"Generate a follow-up email body for this job if no response received to initial email:\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a polite follow-up email body:"
             
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4o-mini",
                 messages=[{"role": "user", "content": followup_prompt}],
-                max_tokens=300
+                max_tokens=400
             )
             followup_body = response.choices[0].message.content.strip()
             

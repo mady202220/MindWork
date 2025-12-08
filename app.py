@@ -1054,29 +1054,44 @@ def enrich_client():
                 c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
             except:
                 pass  # Column already exists
+                
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN proposal_status TEXT DEFAULT "Not Submitted"')
+            except:
+                pass  # Column already exists
+                
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN submitted_by TEXT')
+            except:
+                pass  # Column already exists
+                
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN enriched_by TEXT')
+            except:
+                pass  # Column already exists
         
         if is_postgres:
             c.execute("""UPDATE jobs SET 
                         client_name = %s, client_company = %s, 
                         client_city = %s, client_country = %s, linkedin_url = %s, 
                         email = %s, phone = %s, whatsapp = %s, enriched = 1,
-                        decision_maker = %s
+                        decision_maker = %s, enriched_by = %s
                         WHERE id = %s""",
                      (final_person_name, final_company_name, 
                       city, country, result.get('linkedin', ''), 
                       result.get('email', ''), result.get('phone', ''), 
-                      result.get('whatsapp', ''), search_target, job_id))
+                      result.get('whatsapp', ''), search_target, enrichment_author, job_id))
         else:
             c.execute("""UPDATE jobs SET 
                         client_name = ?, client_company = ?, 
                         client_city = ?, client_country = ?, linkedin_url = ?, 
                         email = ?, phone = ?, whatsapp = ?, enriched = 1,
-                        decision_maker = ?
+                        decision_maker = ?, enriched_by = ?
                         WHERE id = ?""",
                      (final_person_name, final_company_name, 
                       city, country, result.get('linkedin', ''), 
                       result.get('email', ''), result.get('phone', ''), 
-                      result.get('whatsapp', ''), search_target, job_id))
+                      result.get('whatsapp', ''), search_target, enrichment_author, job_id))
         
         conn.commit()
         conn.close()
@@ -1256,21 +1271,25 @@ def update_enrichment():
     if is_postgres:
         c.execute("""UPDATE jobs SET 
                     client_name=%s, client_company=%s, client_city=%s, client_country=%s,
-                    linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, outreach_status=%s
+                    linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, 
+                    outreach_status=%s, proposal_status=%s, submitted_by=%s
                     WHERE id=%s""",
                  (data['client_name'], data['client_company'],
                   data['client_city'], data['client_country'], data['linkedin_url'], 
                   data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
-                  data.get('outreach_status', 'Pending'), job_id))
+                  data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
+                  data.get('submitted_by', ''), job_id))
     else:
         c.execute("""UPDATE jobs SET 
                     client_name=?, client_company=?, client_city=?, client_country=?,
-                    linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, outreach_status=?
+                    linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, 
+                    outreach_status=?, proposal_status=?, submitted_by=?
                     WHERE id=?""",
                  (data['client_name'], data['client_company'],
                   data['client_city'], data['client_country'], data['linkedin_url'], 
                   data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
-                  data.get('outreach_status', 'Pending'), job_id))
+                  data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
+                  data.get('submitted_by', ''), job_id))
     conn.commit()
     conn.close()
     
@@ -1814,6 +1833,68 @@ Use Unicode formatting, no markdown. Be conversational but professional."""
 
 # Start all active RSS feeds
 system.start_all_active_feeds()
+
+@app.route('/analytics')
+@login_required
+def analytics():
+    conn = system.get_db_connection()
+    c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    # Monthly enrichment stats
+    if is_postgres:
+        c.execute("""
+            SELECT 
+                DATE_TRUNC('month', CAST(posted_date AS DATE)) as month,
+                enriched_by,
+                COUNT(*) as count
+            FROM jobs 
+            WHERE enriched = 1 AND enriched_by IS NOT NULL
+            GROUP BY DATE_TRUNC('month', CAST(posted_date AS DATE)), enriched_by
+            ORDER BY month DESC, enriched_by
+        """)
+    else:
+        c.execute("""
+            SELECT 
+                strftime('%Y-%m', posted_date) as month,
+                enriched_by,
+                COUNT(*) as count
+            FROM jobs 
+            WHERE enriched = 1 AND enriched_by IS NOT NULL
+            GROUP BY strftime('%Y-%m', posted_date), enriched_by
+            ORDER BY month DESC, enriched_by
+        """)
+    enrichment_stats = c.fetchall()
+    
+    # Monthly proposal submission stats
+    if is_postgres:
+        c.execute("""
+            SELECT 
+                DATE_TRUNC('month', CAST(posted_date AS DATE)) as month,
+                submitted_by,
+                proposal_status,
+                COUNT(*) as count
+            FROM jobs 
+            WHERE submitted_by IS NOT NULL AND proposal_status != 'Not Submitted'
+            GROUP BY DATE_TRUNC('month', CAST(posted_date AS DATE)), submitted_by, proposal_status
+            ORDER BY month DESC, submitted_by, proposal_status
+        """)
+    else:
+        c.execute("""
+            SELECT 
+                strftime('%Y-%m', posted_date) as month,
+                submitted_by,
+                proposal_status,
+                COUNT(*) as count
+            FROM jobs 
+            WHERE submitted_by IS NOT NULL AND proposal_status != 'Not Submitted'
+            GROUP BY strftime('%Y-%m', posted_date), submitted_by, proposal_status
+            ORDER BY month DESC, submitted_by, proposal_status
+        """)
+    proposal_stats = c.fetchall()
+    
+    conn.close()
+    return render_template('analytics.html', enrichment_stats=enrichment_stats, proposal_stats=proposal_stats)
 
 @app.route('/check-db-type')
 def check_db_type():

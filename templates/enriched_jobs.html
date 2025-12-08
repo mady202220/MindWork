@@ -210,6 +210,46 @@
                    placeholder="🔍 Search jobs by title, company, or client name..." 
                    onkeyup="searchJobs()">
         </div>
+        
+        <!-- Filters -->
+        <div class="analytics-card" style="margin-bottom: var(--space-6);">
+            <h4 style="margin-bottom: var(--space-4);">🔍 Filters</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4);">
+                <div>
+                    <label style="display: block; margin-bottom: var(--space-2); font-weight: 500;">Proposal Status:</label>
+                    <select id="statusFilter" class="contact-input" onchange="applyFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="Not Submitted">Not Submitted</option>
+                        <option value="Saved">Saved</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Proposal Viewed">Proposal Viewed</option>
+                        <option value="Message Received">Message Received</option>
+                        <option value="Absconding">Absconding</option>
+                        <option value="Lost">Lost</option>
+                        <option value="Won">Won</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: var(--space-2); font-weight: 500;">Submitted By:</label>
+                    <select id="userFilter" class="contact-input" onchange="applyFilters()">
+                        <option value="">All Users</option>
+                        <option value="Ashish">Ashish</option>
+                        <option value="Madhuri">Madhuri</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: var(--space-2); font-weight: 500;">Enriched By:</label>
+                    <select id="enrichedFilter" class="contact-input" onchange="applyFilters()">
+                        <option value="">All Users</option>
+                        <option value="Ashish">Ashish</option>
+                        <option value="Madhuri">Madhuri</option>
+                        <option value="Saloni">Saloni</option>
+                        <option value="Mehul">Mehul</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="clearFilters()" style="margin-top: var(--space-4);">Clear Filters</button>
+        </div>
 
         {% if jobs|length == 0 %}
         <div class="empty-state">
@@ -221,7 +261,7 @@
         {% endif %}
 
         {% for job in jobs %}
-        <div class="job-card">
+        <div class="job-card" data-enriched-by="{{ job[27] or '' }}">
             <div class="job-header">
                 <h3 class="job-title">{{ job[1] }}</h3>
                 <div class="job-meta">
@@ -286,6 +326,27 @@
                         <select id="outreach-status-{{ job[0] }}" class="contact-input">
                             <option value="Pending" {% if not job[24] or job[24] == 'Pending' %}selected{% endif %}>Pending</option>
                             <option value="Sent" {% if job[24] == 'Sent' %}selected{% endif %}>Sent</option>
+                        </select>
+                    </div>
+                    <div class="contact-item">
+                        <label class="contact-label">📋 Proposal Status</label>
+                        <select id="proposal-status-{{ job[0] }}" class="contact-input">
+                            <option value="Not Submitted" {% if not job[25] or job[25] == 'Not Submitted' %}selected{% endif %}>Not Submitted</option>
+                            <option value="Saved" {% if job[25] == 'Saved' %}selected{% endif %}>Saved</option>
+                            <option value="Submitted" {% if job[25] == 'Submitted' %}selected{% endif %}>Submitted</option>
+                            <option value="Proposal Viewed" {% if job[25] == 'Proposal Viewed' %}selected{% endif %}>Proposal Viewed</option>
+                            <option value="Message Received" {% if job[25] == 'Message Received' %}selected{% endif %}>Message Received</option>
+                            <option value="Absconding" {% if job[25] == 'Absconding' %}selected{% endif %}>Absconding</option>
+                            <option value="Lost" {% if job[25] == 'Lost' %}selected{% endif %}>Lost</option>
+                            <option value="Won" {% if job[25] == 'Won' %}selected{% endif %}>Won</option>
+                        </select>
+                    </div>
+                    <div class="contact-item">
+                        <label class="contact-label">👤 Submitted By</label>
+                        <select id="submitted-by-{{ job[0] }}" class="contact-input">
+                            <option value="" {% if not job[26] %}selected{% endif %}>Not Selected</option>
+                            <option value="Ashish" {% if job[26] == 'Ashish' %}selected{% endif %}>Ashish</option>
+                            <option value="Madhuri" {% if job[26] == 'Madhuri' %}selected{% endif %}>Madhuri</option>
                         </select>
                     </div>
                 </div>
@@ -381,7 +442,9 @@
                 phone: document.getElementById(`phone-${jobId}`).value,
                 whatsapp: document.getElementById(`whatsapp-${jobId}`).value,
                 decision_maker: document.getElementById(`decision-${jobId}`).value,
-                outreach_status: document.getElementById(`outreach-status-${jobId}`).value
+                outreach_status: document.getElementById(`outreach-status-${jobId}`).value,
+                proposal_status: document.getElementById(`proposal-status-${jobId}`).value,
+                submitted_by: document.getElementById(`submitted-by-${jobId}`).value
             };
             
             fetch('/update_enrichment', {
@@ -423,8 +486,17 @@
         }
         
         function searchJobs() {
+            applyFilters();
+        }
+        
+        function applyFilters() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const userFilter = document.getElementById('userFilter').value;
+            const enrichedFilter = document.getElementById('enrichedFilter').value;
             const jobCards = document.querySelectorAll('.job-card');
+            
+            let visibleCount = 0;
             
             jobCards.forEach(card => {
                 const title = card.querySelector('.job-title').textContent.toLowerCase();
@@ -433,12 +505,39 @@
                 const name = nameInput ? nameInput.value.toLowerCase() : '';
                 const company = companyInput ? companyInput.value.toLowerCase() : '';
                 
-                if (title.includes(searchTerm) || name.includes(searchTerm) || company.includes(searchTerm)) {
+                // Get current values from dropdowns
+                const proposalStatusSelect = card.querySelector('select[id*="proposal-status-"]');
+                const submittedBySelect = card.querySelector('select[id*="submitted-by-"]');
+                const currentProposalStatus = proposalStatusSelect ? proposalStatusSelect.value : '';
+                const currentSubmittedBy = submittedBySelect ? submittedBySelect.value : '';
+                
+                // Get enriched by from job data (you'll need to add this to the template)
+                const enrichedBy = card.getAttribute('data-enriched-by') || '';
+                
+                // Apply filters
+                const matchesSearch = !searchTerm || title.includes(searchTerm) || name.includes(searchTerm) || company.includes(searchTerm);
+                const matchesStatus = !statusFilter || currentProposalStatus === statusFilter;
+                const matchesUser = !userFilter || currentSubmittedBy === userFilter;
+                const matchesEnriched = !enrichedFilter || enrichedBy === enrichedFilter;
+                
+                if (matchesSearch && matchesStatus && matchesUser && matchesEnriched) {
                     card.style.display = 'block';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+            
+            // Update stats to show filtered count
+            document.querySelector('.stat-card h3').textContent = visibleCount;
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('userFilter').value = '';
+            document.getElementById('enrichedFilter').value = '';
+            applyFilters();
         }
         
         let currentJobData = {};

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analytics - MindWork</title>
+    <link rel="stylesheet" href="/static/css/brand.css">
+    <style>
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8); }
+        .analytics-card { background: white; padding: var(--space-6); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+        .analytics-title { font-size: 1.25rem; font-weight: 600; color: var(--gray-900); margin-bottom: var(--space-4); }
+        .stats-table { width: 100%; border-collapse: collapse; }
+        .stats-table th, .stats-table td { padding: var(--space-3); text-align: left; border-bottom: 1px solid var(--gray-200); }
+        .stats-table th { background: var(--gray-50); font-weight: 600; color: var(--gray-700); }
+        .user-ashish { color: var(--primary-blue); font-weight: 500; }
+        .user-madhuri { color: var(--secondary-purple); font-weight: 500; }
+        .status-won { color: var(--success-green); font-weight: 600; }
+        .status-lost { color: var(--danger-red); font-weight: 500; }
+        .status-submitted { color: var(--warning-orange); font-weight: 500; }
+        @media (max-width: 768px) { .analytics-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Analytics Dashboard</h1>
+        <p>Monthly performance tracking and statistics</p>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab">Dashboard</a>
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched Jobs</a>
+        <a href="/team-management" class="nav-tab">👥 Team</a>
+        <a href="/analytics" class="nav-tab active">📊 Analytics</a>
+        <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
+    </div>
+
+    <div class="container">
+        <div class="analytics-grid">
+            <!-- Monthly Enrichment Stats -->
+            <div class="analytics-card">
+                <h3 class="analytics-title">🔍 Monthly Enrichment Stats</h3>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>User</th>
+                            <th>Enriched Jobs</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in enrichment_stats %}
+                        <tr>
+                            <td>{{ stat[0] }}</td>
+                            <td class="{% if stat[1] == 'Ashish' %}user-ashish{% else %}user-madhuri{% endif %}">
+                                {{ stat[1] }}
+                            </td>
+                            <td><strong>{{ stat[2] }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                        {% if not enrichment_stats %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: var(--gray-500);">
+                                No enrichment data available
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Monthly Proposal Stats -->
+            <div class="analytics-card">
+                <h3 class="analytics-title">📝 Monthly Proposal Stats</h3>
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in proposal_stats %}
+                        <tr>
+                            <td>{{ stat[0] }}</td>
+                            <td class="{% if stat[1] == 'Ashish' %}user-ashish{% else %}user-madhuri{% endif %}">
+                                {{ stat[1] }}
+                            </td>
+                            <td class="{% if stat[2] == 'Won' %}status-won{% elif stat[2] == 'Lost' %}status-lost{% else %}status-submitted{% endif %}">
+                                {{ stat[2] }}
+                            </td>
+                            <td><strong>{{ stat[3] }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                        {% if not proposal_stats %}
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: var(--gray-500);">
+                                No proposal data available
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 class="stat-number" id="total-enriched">0</h3>
+                <p class="stat-label">Total Enriched This Month</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-number" id="total-submitted">0</h3>
+                <p class="stat-label">Total Submitted This Month</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-number" id="total-won">0</h3>
+                <p class="stat-label">Total Won This Month</p>
+            </div>
+            <div class="stat-card">
+                <h3 class="stat-number" id="win-rate">0%</h3>
+                <p class="stat-label">Win Rate This Month</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Calculate summary stats
+        function calculateSummary() {
+            const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+            
+            let totalEnriched = 0;
+            let totalSubmitted = 0;
+            let totalWon = 0;
+            
+            // Count enrichment stats for current month
+            {% for stat in enrichment_stats %}
+            if ('{{ stat[0] }}'.includes(currentMonth)) {
+                totalEnriched += {{ stat[2] }};
+            }
+            {% endfor %}
+            
+            // Count proposal stats for current month
+            {% for stat in proposal_stats %}
+            if ('{{ stat[0] }}'.includes(currentMonth)) {
+                totalSubmitted += {{ stat[3] }};
+                if ('{{ stat[2] }}' === 'Won') {
+                    totalWon += {{ stat[3] }};
+                }
+            }
+            {% endfor %}
+            
+            const winRate = totalSubmitted > 0 ? Math.round((totalWon / totalSubmitted) * 100) : 0;
+            
+            document.getElementById('total-enriched').textContent = totalEnriched;
+            document.getElementById('total-submitted').textContent = totalSubmitted;
+            document.getElementById('total-won').textContent = totalWon;
+            document.getElementById('win-rate').textContent = winRate + '%';
+        }
+        
+        calculateSummary();
+    </script>
+</body>
+</html>

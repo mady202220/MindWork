@@ -100,6 +100,35 @@
             <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
             <button class="btn" style="background: #e74c3c; color: white;" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
             
+            <!-- Job Status Section -->
+            <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--secondary-purple);">
+                <h4 style="margin: 0 0 12px 0; color: var(--gray-900);">📋 Job Status</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700);">Proposal Status:</label>
+                        <select id="job-proposal-status-{{ job[0] }}" style="width: 100%; padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
+                            <option value="Not Submitted">Not Submitted</option>
+                            <option value="Saved">Saved</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Proposal Viewed">Proposal Viewed</option>
+                            <option value="Message Received">Message Received</option>
+                            <option value="Absconding">Absconding</option>
+                            <option value="Lost">Lost</option>
+                            <option value="Won">Won</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-700);">Submitted By:</label>
+                        <select id="job-submitted-by-{{ job[0] }}" style="width: 100%; padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
+                            <option value="">Not Selected</option>
+                            <option value="Ashish">Ashish</option>
+                            <option value="Madhuri">Madhuri</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="margin-top: 12px;" onclick="updateJobStatus('{{ job[0] }}')">💾 Save Status</button>
+            </div>
+            
             <!-- Client Enrichment Section -->
             <div class="enrichment-section">
                 <h4>🔍 Client Enrichment</h4>
@@ -410,6 +439,41 @@
         
         updateStats();
         setInterval(() => location.reload(), 600000);
+        
+        function updateJobStatus(jobId) {
+            const proposalStatus = document.getElementById(`job-proposal-status-${jobId}`).value;
+            const submittedBy = document.getElementById(`job-submitted-by-${jobId}`).value;
+            
+            fetch('/update_enrichment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    job_id: jobId,
+                    proposal_status: proposalStatus,
+                    submitted_by: submittedBy,
+                    client_name: '',
+                    client_company: '',
+                    client_city: '',
+                    client_country: '',
+                    linkedin_url: '',
+                    email: '',
+                    phone: '',
+                    whatsapp: '',
+                    decision_maker: ''
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Job status updated successfully!');
+                } else {
+                    alert('Failed to update job status');
+                }
+            })
+            .catch(error => {
+                alert('Error updating job status: ' + error);
+            });
+        }
         
         function searchJobs() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();

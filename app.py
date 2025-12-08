@@ -108,11 +108,11 @@ class MultiRSSProposalSystem:
         
         if is_postgres:
             c.execute('''CREATE TABLE IF NOT EXISTS proposals
-                         (id SERIAL PRIMARY KEY, job_id TEXT, proposal TEXT, 
+                         (id SERIAL PRIMARY KEY, job_id TEXT UNIQUE, proposal TEXT, 
                           examples TEXT, created_at TEXT, debug_log TEXT, enrichment_author TEXT)''')
         else:
             c.execute('''CREATE TABLE IF NOT EXISTS proposals
-                         (id INTEGER PRIMARY KEY, job_id TEXT, proposal TEXT, 
+                         (id INTEGER PRIMARY KEY, job_id TEXT UNIQUE, proposal TEXT, 
                           examples TEXT, created_at TEXT, debug_log TEXT, enrichment_author TEXT)''')
         
         # Team profiles table
@@ -869,16 +869,22 @@ def generate_proposal():
         is_postgres = os.getenv('DATABASE_URL') is not None
         
         if is_postgres:
-            c.execute("""INSERT INTO proposals 
-                        (job_id, proposal, examples, created_at, debug_log)
-                        VALUES (%s, %s, %s, %s, %s)
-                        ON CONFLICT (job_id) DO UPDATE SET
-                        proposal = EXCLUDED.proposal,
-                        examples = EXCLUDED.examples,
-                        created_at = EXCLUDED.created_at,
-                        debug_log = EXCLUDED.debug_log""",
-                     (job_id, proposal, json.dumps(examples), datetime.now().isoformat(), 
-                      json.dumps(debug_log)))
+            # Check if proposal exists, update or insert
+            c.execute("SELECT id FROM proposals WHERE job_id = %s", (job_id,))
+            existing = c.fetchone()
+            
+            if existing:
+                c.execute("""UPDATE proposals SET 
+                            proposal = %s, examples = %s, created_at = %s, debug_log = %s
+                            WHERE job_id = %s""",
+                         (proposal, json.dumps(examples), datetime.now().isoformat(), 
+                          json.dumps(debug_log), job_id))
+            else:
+                c.execute("""INSERT INTO proposals 
+                            (job_id, proposal, examples, created_at, debug_log)
+                            VALUES (%s, %s, %s, %s, %s)""",
+                         (job_id, proposal, json.dumps(examples), datetime.now().isoformat(), 
+                          json.dumps(debug_log)))
             c.execute("UPDATE jobs SET processed = 1 WHERE id = %s", (job_id,))
         else:
             c.execute("""INSERT OR REPLACE INTO proposals 

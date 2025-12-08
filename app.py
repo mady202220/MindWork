@@ -625,9 +625,12 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE email = ? AND password = ? AND active = 1", (email, password))
+        if os.getenv('DATABASE_URL'):
+            c.execute("SELECT * FROM users WHERE email = %s AND password = %s AND active = 1", (email, password))
+        else:
+            c.execute("SELECT * FROM users WHERE email = ? AND password = ? AND active = 1", (email, password))
         user = c.fetchone()
         conn.close()
         
@@ -685,18 +688,11 @@ def team_management():
 @app.route('/enriched-jobs')
 @login_required
 def enriched_jobs():
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
     
-    # Check if enriched_at column exists, if not use posted_date
-    c.execute("PRAGMA table_info(jobs)")
-    columns = [col[1] for col in c.fetchall()]
-    
-    if 'enriched_at' in columns:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY enriched_at DESC")
-    else:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY posted_date DESC")
-    
+    # Just use posted_date for ordering (enriched_at may not exist)
+    c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY posted_date DESC")
     jobs = c.fetchall()
     conn.close()
     return render_template('enriched_jobs.html', jobs=jobs)
@@ -718,14 +714,22 @@ def job_matcher():
 def add_profile():
     data = request.json
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("""INSERT INTO team_profiles 
-                (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-             (data['name'], data['title'], data['skills'], data['description'],
-              data['profile_url'], data['hourly_rate'], data['experience_years'],
-              data['specialization'], data['active']))
+    if os.getenv('DATABASE_URL'):
+        c.execute("""INSERT INTO team_profiles 
+                    (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                 (data['name'], data['title'], data['skills'], data['description'],
+                  data['profile_url'], data['hourly_rate'], data['experience_years'],
+                  data['specialization'], data['active']))
+    else:
+        c.execute("""INSERT INTO team_profiles 
+                    (name, title, skills, description, profile_url, hourly_rate, experience_years, specialization, active)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                 (data['name'], data['title'], data['skills'], data['description'],
+                  data['profile_url'], data['hourly_rate'], data['experience_years'],
+                  data['specialization'], data['active']))
     conn.commit()
     conn.close()
     
@@ -735,16 +739,26 @@ def add_profile():
 def update_profile(profile_id):
     data = request.json
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("""UPDATE team_profiles SET 
-                name = ?, title = ?, skills = ?, description = ?, 
-                profile_url = ?, hourly_rate = ?, experience_years = ?, 
-                specialization = ?, active = ?
-                WHERE id = ?""",
-             (data['name'], data['title'], data['skills'], data['description'],
-              data['profile_url'], data['hourly_rate'], data['experience_years'],
-              data['specialization'], data['active'], profile_id))
+    if os.getenv('DATABASE_URL'):
+        c.execute("""UPDATE team_profiles SET 
+                    name = %s, title = %s, skills = %s, description = %s, 
+                    profile_url = %s, hourly_rate = %s, experience_years = %s, 
+                    specialization = %s, active = %s
+                    WHERE id = %s""",
+                 (data['name'], data['title'], data['skills'], data['description'],
+                  data['profile_url'], data['hourly_rate'], data['experience_years'],
+                  data['specialization'], data['active'], profile_id))
+    else:
+        c.execute("""UPDATE team_profiles SET 
+                    name = ?, title = ?, skills = ?, description = ?, 
+                    profile_url = ?, hourly_rate = ?, experience_years = ?, 
+                    specialization = ?, active = ?
+                    WHERE id = ?""",
+                 (data['name'], data['title'], data['skills'], data['description'],
+                  data['profile_url'], data['hourly_rate'], data['experience_years'],
+                  data['specialization'], data['active'], profile_id))
     conn.commit()
     conn.close()
     
@@ -781,10 +795,14 @@ def add_rss():
 
 @app.route('/toggle_rss/<int:rss_id>', methods=['POST'])
 def toggle_rss(rss_id):
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("UPDATE rss_feeds SET active = 1 - active WHERE id = ?", (rss_id,))
-    c.execute("SELECT active FROM rss_feeds WHERE id = ?", (rss_id,))
+    if os.getenv('DATABASE_URL'):
+        c.execute("UPDATE rss_feeds SET active = 1 - active WHERE id = %s", (rss_id,))
+        c.execute("SELECT active FROM rss_feeds WHERE id = %s", (rss_id,))
+    else:
+        c.execute("UPDATE rss_feeds SET active = 1 - active WHERE id = ?", (rss_id,))
+        c.execute("SELECT active FROM rss_feeds WHERE id = ?", (rss_id,))
     new_status = c.fetchone()[0]
     conn.commit()
     conn.close()
@@ -795,13 +813,20 @@ def toggle_rss(rss_id):
 def update_prompts(rss_id):
     data = request.json
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("""UPDATE rss_feeds SET 
-                 keyword_prompt = ?, proposal_prompt = ?, olostep_prompt = ?
-                 WHERE id = ?""",
-             (data['keyword_prompt'], data['proposal_prompt'], 
-              data['olostep_prompt'], rss_id))
+    if os.getenv('DATABASE_URL'):
+        c.execute("""UPDATE rss_feeds SET 
+                     keyword_prompt = %s, proposal_prompt = %s, olostep_prompt = %s
+                     WHERE id = %s""",
+                 (data['keyword_prompt'], data['proposal_prompt'], 
+                  data['olostep_prompt'], rss_id))
+    else:
+        c.execute("""UPDATE rss_feeds SET 
+                     keyword_prompt = ?, proposal_prompt = ?, olostep_prompt = ?
+                     WHERE id = ?""",
+                 (data['keyword_prompt'], data['proposal_prompt'], 
+                  data['olostep_prompt'], rss_id))
     conn.commit()
     conn.close()
     
@@ -814,9 +839,12 @@ def generate_proposal():
     rss_id = data['rss_id']
     
     # Get job details
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    if os.getenv('DATABASE_URL'):
+        c.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
+    else:
+        c.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
     job = c.fetchone()
     conn.close()
     
@@ -836,14 +864,30 @@ def generate_proposal():
         debug_log.extend(proposal_debug)
         
         # Save proposal
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
-        c.execute("""INSERT OR REPLACE INTO proposals 
-                    (job_id, proposal, examples, created_at, debug_log)
-                    VALUES (?, ?, ?, ?, ?)""",
-                 (job_id, proposal, json.dumps(examples), datetime.now().isoformat(), 
-                  json.dumps(debug_log)))
-        c.execute("UPDATE jobs SET processed = 1 WHERE id = ?", (job_id,))
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        if is_postgres:
+            c.execute("""INSERT INTO proposals 
+                        (job_id, proposal, examples, created_at, debug_log)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ON CONFLICT (job_id) DO UPDATE SET
+                        proposal = EXCLUDED.proposal,
+                        examples = EXCLUDED.examples,
+                        created_at = EXCLUDED.created_at,
+                        debug_log = EXCLUDED.debug_log""",
+                     (job_id, proposal, json.dumps(examples), datetime.now().isoformat(), 
+                      json.dumps(debug_log)))
+            c.execute("UPDATE jobs SET processed = 1 WHERE id = %s", (job_id,))
+        else:
+            c.execute("""INSERT OR REPLACE INTO proposals 
+                        (job_id, proposal, examples, created_at, debug_log)
+                        VALUES (?, ?, ?, ?, ?)""",
+                     (job_id, proposal, json.dumps(examples), datetime.now().isoformat(), 
+                      json.dumps(debug_log)))
+            c.execute("UPDATE jobs SET processed = 1 WHERE id = ?", (job_id,))
+        
         conn.commit()
         conn.close()
         
@@ -965,30 +1009,44 @@ def enrich_client():
         final_company_name = company_name or result.get('found_company', '')
         
         # Update job with enrichment data using your existing schema
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
-        # Add enriched_at column if it doesn't exist
-        try:
-            c.execute('ALTER TABLE jobs ADD COLUMN enriched_at TEXT')
-        except:
-            pass  # Column already exists
+        is_postgres = os.getenv('DATABASE_URL') is not None
         
-        # Add outreach_status column if it doesn't exist
-        try:
-            c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
-        except:
-            pass  # Column already exists
+        # Add columns if they don't exist (skip for PostgreSQL as they should exist)
+        if not is_postgres:
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN enriched_at TEXT')
+            except:
+                pass  # Column already exists
+            
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
+            except:
+                pass  # Column already exists
         
-        c.execute("""UPDATE jobs SET 
-                    client_name = ?, client_company = ?, 
-                    client_city = ?, client_country = ?, linkedin_url = ?, 
-                    email = ?, phone = ?, whatsapp = ?, enriched = 1,
-                    decision_maker = ?, enriched_at = ?
-                    WHERE id = ?""",
-                 (final_person_name, final_company_name, 
-                  city, country, result.get('linkedin', ''), 
-                  result.get('email', ''), result.get('phone', ''), 
-                  result.get('whatsapp', ''), search_target, datetime.now().isoformat(), job_id))
+        if is_postgres:
+            c.execute("""UPDATE jobs SET 
+                        client_name = %s, client_company = %s, 
+                        client_city = %s, client_country = %s, linkedin_url = %s, 
+                        email = %s, phone = %s, whatsapp = %s, enriched = 1,
+                        decision_maker = %s, enriched_at = %s
+                        WHERE id = %s""",
+                     (final_person_name, final_company_name, 
+                      city, country, result.get('linkedin', ''), 
+                      result.get('email', ''), result.get('phone', ''), 
+                      result.get('whatsapp', ''), search_target, datetime.now().isoformat(), job_id))
+        else:
+            c.execute("""UPDATE jobs SET 
+                        client_name = ?, client_company = ?, 
+                        client_city = ?, client_country = ?, linkedin_url = ?, 
+                        email = ?, phone = ?, whatsapp = ?, enriched = 1,
+                        decision_maker = ?, enriched_at = ?
+                        WHERE id = ?""",
+                     (final_person_name, final_company_name, 
+                      city, country, result.get('linkedin', ''), 
+                      result.get('email', ''), result.get('phone', ''), 
+                      result.get('whatsapp', ''), search_target, datetime.now().isoformat(), job_id))
         
         conn.commit()
         conn.close()
@@ -1015,9 +1073,12 @@ def api_login():
     email = data.get('email')
     password = data.get('password')
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE email = ? AND password = ? AND active = 1", (email, password))
+    if os.getenv('DATABASE_URL'):
+        c.execute("SELECT * FROM users WHERE email = %s AND password = %s AND active = 1", (email, password))
+    else:
+        c.execute("SELECT * FROM users WHERE email = ? AND password = ? AND active = 1", (email, password))
     user = c.fetchone()
     conn.close()
     
@@ -1151,23 +1212,35 @@ def update_enrichment():
     data = request.json
     job_id = data['job_id']
     
-    conn = sqlite3.connect('proposals.db')
+    conn = system.get_db_connection()
     c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
     
-    # Add outreach_status column if it doesn't exist
-    try:
-        c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
-    except:
-        pass  # Column already exists
+    # Add outreach_status column if it doesn't exist (skip for PostgreSQL)
+    if not is_postgres:
+        try:
+            c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
+        except:
+            pass  # Column already exists
     
-    c.execute("""UPDATE jobs SET 
-                client_name=?, client_company=?, client_city=?, client_country=?,
-                linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, outreach_status=?
-                WHERE id=?""",
-             (data['client_name'], data['client_company'],
-              data['client_city'], data['client_country'], data['linkedin_url'], 
-              data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
-              data.get('outreach_status', 'Pending'), job_id))
+    if is_postgres:
+        c.execute("""UPDATE jobs SET 
+                    client_name=%s, client_company=%s, client_city=%s, client_country=%s,
+                    linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, outreach_status=%s
+                    WHERE id=%s""",
+                 (data['client_name'], data['client_company'],
+                  data['client_city'], data['client_country'], data['linkedin_url'], 
+                  data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
+                  data.get('outreach_status', 'Pending'), job_id))
+    else:
+        c.execute("""UPDATE jobs SET 
+                    client_name=?, client_company=?, client_city=?, client_country=?,
+                    linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, outreach_status=?
+                    WHERE id=?""",
+                 (data['client_name'], data['client_company'],
+                  data['client_city'], data['client_country'], data['linkedin_url'], 
+                  data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
+                  data.get('outreach_status', 'Pending'), job_id))
     conn.commit()
     conn.close()
     
@@ -1176,12 +1249,16 @@ def update_enrichment():
 @app.route('/delete_job/<job_id>', methods=['POST'])
 def delete_job(job_id):
     try:
-        conn = sqlite3.connect('proposals.db')
+        conn = system.get_db_connection()
         c = conn.cursor()
         
         # Delete job and related proposals
-        c.execute("DELETE FROM proposals WHERE job_id = ?", (job_id,))
-        c.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+        if os.getenv('DATABASE_URL'):
+            c.execute("DELETE FROM proposals WHERE job_id = %s", (job_id,))
+            c.execute("DELETE FROM jobs WHERE id = %s", (job_id,))
+        else:
+            c.execute("DELETE FROM proposals WHERE job_id = ?", (job_id,))
+            c.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
         
         conn.commit()
         conn.close()

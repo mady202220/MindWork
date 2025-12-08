@@ -13,7 +13,15 @@
         .status-paused { background: var(--danger-red-light); color: var(--danger-red); }
         .prompt-section { margin: var(--space-6) 0; padding: var(--space-4); background: var(--warning-orange-light); border-radius: var(--radius-md); }
         .prompt-title { font-weight: 600; margin-bottom: var(--space-3); color: var(--warning-orange); }
-        .add-rss-form { background: var(--success-green-light); padding: var(--space-6); border-radius: var(--radius-lg); margin-bottom: var(--space-6); }
+        .add-rss-form { background: var(--gray-50); padding: var(--space-8); border-radius: var(--radius-lg); margin-bottom: var(--space-6); border: 1px solid var(--gray-200); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        .form-input { width: 100%; padding: var(--space-3); border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 0.875rem; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-blue-light); }
+        .form-textarea { width: 100%; padding: var(--space-3); border: 2px solid var(--gray-200); border-radius: var(--radius-md); font-size: 0.875rem; min-height: 120px; font-family: var(--font-mono); transition: all 0.2s; resize: vertical; }
+        .form-textarea:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-blue-light); }
+        .form-label { display: block; margin-bottom: var(--space-2); font-weight: 600; color: var(--gray-700); font-size: 0.875rem; }
+        .section-title { font-size: 1.5rem; font-weight: 700; color: var(--gray-900); margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-2); }
     </style>
 </head>
 <body>
@@ -33,29 +41,33 @@
     <div class="container">
         <!-- Add New RSS Feed -->
         <div class="admin-section">
-            <h2>➕ Add New RSS Feed</h2>
+            <h2 class="section-title">
+                <span>➕</span>
+                <span>Add New RSS Feed</span>
+            </h2>
             <div class="add-rss-form">
-                <div class="form-group">
-                    <label>Feed Name:</label>
-                    <input type="text" id="new-feed-name" placeholder="e.g., Mobile Development">
-                </div>
-                <div class="form-group">
-                    <label>RSS URL:</label>
-                    <input type="url" id="new-feed-url" placeholder="https://www.vollna.com/rss/...">
-                </div>
-                <div class="form-group">
-                    <label>Keyword Extraction Prompt:</label>
-                    <textarea id="new-keyword-prompt" placeholder="Prompt for extracting keywords from job descriptions...">Extract 2 non-technical, functionality-based keywords from this job description for app searching.
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">📡 Feed Name</label>
+                        <input type="text" id="new-feed-name" class="form-input" placeholder="e.g., Mobile Development Jobs">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔗 RSS URL</label>
+                        <input type="url" id="new-feed-url" class="form-input" placeholder="https://www.vollna.com/rss/...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">🔍 Keyword Extraction Prompt</label>
+                        <textarea id="new-keyword-prompt" class="form-textarea" placeholder="Prompt for extracting keywords from job descriptions...">Extract 2 non-technical, functionality-based keywords from this job description for app searching.
 Focus on industry/category and main function (e.g., "healthcare booking", "food delivery").
 If too technical, use generic categories.
 
 Job: {job_description}
 
 Return only 2 keywords separated by comma:</textarea>
-                </div>
-                <div class="form-group">
-                    <label>Proposal Generation Prompt:</label>
-                    <textarea id="new-proposal-prompt" placeholder="Prompt for generating proposals...">Generate a Proposalgenie-format proposal for this job:
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">📝 Proposal Generation Prompt</label>
+                        <textarea id="new-proposal-prompt" class="form-textarea" placeholder="Prompt for generating proposals...">Generate a Proposalgenie-format proposal for this job:
 
 Job Title: {job_title}
 Job Description: {job_description}
@@ -71,18 +83,24 @@ Follow the exact format:
 - Paragraph 4: CTA with call availability
 
 Use Unicode formatting, no markdown. Be conversational but professional.</textarea>
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">🔍 Olostep Enrichment Prompt</label>
+                        <textarea id="new-olostep-prompt" class="form-textarea" placeholder="Prompt for client enrichment...">Find contact info for {search_target} in {city}, {country}. Get LinkedIn, email, phone, WhatsApp.</textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Olostep Enrichment Prompt:</label>
-                    <textarea id="new-olostep-prompt" placeholder="Prompt for client enrichment...">Find contact info for {search_target} in {city}, {country}. Get LinkedIn, email, phone, WhatsApp.</textarea>
+                <div style="margin-top: var(--space-6); text-align: center;">
+                    <button class="btn btn-success btn-lg" onclick="addRSSFeed()">✅ Add RSS Feed</button>
                 </div>
-                <button class="btn btn-success" onclick="addRSSFeed()">Add RSS Feed</button>
             </div>
         </div>
 
         <!-- Existing RSS Feeds -->
         <div class="admin-section">
-            <h2>📡 Manage RSS Feeds</h2>
+            <h2 class="section-title">
+                <span>📡</span>
+                <span>Manage RSS Feeds</span>
+            </h2>
             
             {% for feed in feeds %}
             <div class="feed-card" id="feed-{{ feed[0] }}">

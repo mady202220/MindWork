@@ -279,94 +279,107 @@
                 </div>
             </div>
             
-            <div class="enriched-section">
-                <h4 class="section-title">
-                    <span>📞</span>
-                    <span>Contact Information</span>
-                </h4>
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <label class="contact-label">👤 Contact Name</label>
-                        <input type="text" id="name-{{ job[0] }}" value="{{ job[10] or '' }}" class="contact-input">
+            <!-- Compact Summary -->
+            <div style="padding: var(--space-4); background: var(--gray-50); border-radius: 8px; margin: 16px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div>
+                        <strong>📞 {{ job[10] or 'No Name' }}</strong> • 
+                        <span>🏢 {{ job[11] or 'No Company' }}</span> • 
+                        <span>📍 {{ job[12] or 'Unknown' }}, {{ job[13] or 'Unknown' }}</span>
                     </div>
-                    <div class="contact-item">
-                        <label class="contact-label">🏢 Company</label>
-                        <input type="text" id="company-{{ job[0] }}" value="{{ job[11] or '' }}" class="contact-input">
+                    <button class="btn btn-outline btn-sm" onclick="toggleEnrichmentDetails('{{ job[0] }}')">
+                        📋 View Details
+                    </button>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--gray-600);">
+                    <strong>Description:</strong> {{ job[2][:150] }}...
+                </div>
+            </div>
+            
+            <!-- Collapsible Details -->
+            <div id="enrichment-details-{{ job[0] }}" style="display: none;">
+                <div class="enriched-section">
+                    <h4 class="section-title">
+                        <span>📞</span>
+                        <span>Contact Information</span>
+                    </h4>
+                    <div class="contact-grid">
+                        <div class="contact-item">
+                            <label class="contact-label">👤 Contact Name</label>
+                            <input type="text" id="name-{{ job[0] }}" value="{{ job[10] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">🏢 Company</label>
+                            <input type="text" id="company-{{ job[0] }}" value="{{ job[11] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">🌆 City</label>
+                            <input type="text" id="city-{{ job[0] }}" value="{{ job[12] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">🌍 Country</label>
+                            <input type="text" id="country-{{ job[0] }}" value="{{ job[13] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">🔗 LinkedIn</label>
+                            <input type="text" id="linkedin-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">✉️ Email</label>
+                            <input type="text" id="email-{{ job[0] }}" value="{{ job[15] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">📞 Phone</label>
+                            <input type="text" id="phone-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">📱 WhatsApp</label>
+                            <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[17] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">🎯 Decision Maker</label>
+                            <input type="text" id="decision-{{ job[0] }}" value="{{ job[19] or '' }}" class="contact-input">
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">📤 Outreach Status</label>
+                            <select id="outreach-status-{{ job[0] }}" class="contact-input">
+                                <option value="Pending" {% if not job[24] or job[24] == 'Pending' %}selected{% endif %}>Pending</option>
+                                <option value="Sent" {% if job[24] == 'Sent' %}selected{% endif %}>Sent</option>
+                            </select>
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">📋 Proposal Status</label>
+                            <select id="proposal-status-{{ job[0] }}" class="contact-input">
+                                <option value="Not Submitted" {% if not job[25] or job[25] == 'Not Submitted' %}selected{% endif %}>Not Submitted</option>
+                                <option value="Saved" {% if job[25] == 'Saved' %}selected{% endif %}>Saved</option>
+                                <option value="Submitted" {% if job[25] == 'Submitted' %}selected{% endif %}>Submitted</option>
+                                <option value="Proposal Viewed" {% if job[25] == 'Proposal Viewed' %}selected{% endif %}>Proposal Viewed</option>
+                                <option value="Message Received" {% if job[25] == 'Message Received' %}selected{% endif %}>Message Received</option>
+                                <option value="Absconding" {% if job[25] == 'Absconding' %}selected{% endif %}>Absconding</option>
+                                <option value="Lost" {% if job[25] == 'Lost' %}selected{% endif %}>Lost</option>
+                                <option value="Won" {% if job[25] == 'Won' %}selected{% endif %}>Won</option>
+                            </select>
+                        </div>
+                        <div class="contact-item">
+                            <label class="contact-label">👤 Submitted By</label>
+                            <select id="submitted-by-{{ job[0] }}" class="contact-input">
+                                <option value="" {% if not job[26] %}selected{% endif %}>Not Selected</option>
+                                <option value="Ashish" {% if job[26] == 'Ashish' %}selected{% endif %}>Ashish</option>
+                                <option value="Madhuri" {% if job[26] == 'Madhuri' %}selected{% endif %}>Madhuri</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="contact-item">
-                        <label class="contact-label">🌆 City</label>
-                        <input type="text" id="city-{{ job[0] }}" value="{{ job[12] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">🌍 Country</label>
-                        <input type="text" id="country-{{ job[0] }}" value="{{ job[13] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">🔗 LinkedIn</label>
-                        <input type="text" id="linkedin-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">✉️ Email</label>
-                        <input type="text" id="email-{{ job[0] }}" value="{{ job[15] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">📞 Phone</label>
-                        <input type="text" id="phone-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">📱 WhatsApp</label>
-                        <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[17] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">🎯 Decision Maker</label>
-                        <input type="text" id="decision-{{ job[0] }}" value="{{ job[19] or '' }}" class="contact-input">
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">📤 Outreach Status</label>
-                        <select id="outreach-status-{{ job[0] }}" class="contact-input">
-                            <option value="Pending" {% if not job[24] or job[24] == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="Sent" {% if job[24] == 'Sent' %}selected{% endif %}>Sent</option>
-                        </select>
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">📋 Proposal Status</label>
-                        <select id="proposal-status-{{ job[0] }}" class="contact-input">
-                            <option value="Not Submitted" {% if not job[25] or job[25] == 'Not Submitted' %}selected{% endif %}>Not Submitted</option>
-                            <option value="Saved" {% if job[25] == 'Saved' %}selected{% endif %}>Saved</option>
-                            <option value="Submitted" {% if job[25] == 'Submitted' %}selected{% endif %}>Submitted</option>
-                            <option value="Proposal Viewed" {% if job[25] == 'Proposal Viewed' %}selected{% endif %}>Proposal Viewed</option>
-                            <option value="Message Received" {% if job[25] == 'Message Received' %}selected{% endif %}>Message Received</option>
-                            <option value="Absconding" {% if job[25] == 'Absconding' %}selected{% endif %}>Absconding</option>
-                            <option value="Lost" {% if job[25] == 'Lost' %}selected{% endif %}>Lost</option>
-                            <option value="Won" {% if job[25] == 'Won' %}selected{% endif %}>Won</option>
-                        </select>
-                    </div>
-                    <div class="contact-item">
-                        <label class="contact-label">👤 Submitted By</label>
-                        <select id="submitted-by-{{ job[0] }}" class="contact-input">
-                            <option value="" {% if not job[26] %}selected{% endif %}>Not Selected</option>
-                            <option value="Ashish" {% if job[26] == 'Ashish' %}selected{% endif %}>Ashish</option>
-                            <option value="Madhuri" {% if job[26] == 'Madhuri' %}selected{% endif %}>Madhuri</option>
-                        </select>
+                    
+                    <div style="margin-top: var(--space-4); display: flex; flex-wrap: wrap; gap: var(--space-2);">
+                        <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
+                        <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
+                        <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
+                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📱 WhatsApp</button>
+                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">💼 LinkedIn</button>
+                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📧 Email</button>
+                        <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
-                
-                <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">Save Changes</button>
-                
-
-            </div>
-            
-            <div style="margin-top: 15px;">
-                <strong>Description:</strong> {{ job[2][:200] }}...
-            </div>
-            
-            <div style="margin-top: 15px;">
-                <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">View Job</a>
-                <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">Generate Proposal</button>
-                <button class="btn" style="background: #25D366; color: white;" onclick="openWhatsAppModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📱 Generate WA</button>
-                <button class="btn" style="background: #0077B5; color: white;" onclick="openLinkedInModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">💼 Generate LinkedIn</button>
-                <button class="btn" style="background: #EA4335; color: white;" onclick="openEmailModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📧 Generate Email</button>
-                <button class="btn" style="background: #e74c3c; color: white;" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
             </div>
         </div>
         {% endfor %}
@@ -667,6 +680,15 @@
         
         // Initialize stats
         updateOutreachStats();
+        
+        function toggleEnrichmentDetails(jobId) {
+            const detailsDiv = document.getElementById(`enrichment-details-${jobId}`);
+            if (detailsDiv.style.display === 'none') {
+                detailsDiv.style.display = 'block';
+            } else {
+                detailsDiv.style.display = 'none';
+            }
+        }
         
         function updateOutreachStats() {
             let pendingCount = 0;

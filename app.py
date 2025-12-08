@@ -1581,35 +1581,6 @@ Use Unicode formatting, no markdown. Be conversational but professional."""
     
     return jsonify({'success': True, 'message': 'Web Development prompts updated to correct version'})
 
-# Ensure Manual Jobs feed exists and fix job sources
-conn = sqlite3.connect('proposals.db')
-c = conn.cursor()
-c.execute("SELECT COUNT(*) FROM rss_feeds WHERE name = 'Manual Jobs'")
-if c.fetchone()[0] == 0:
-    c.execute("""INSERT INTO rss_feeds 
-                (name, url, keyword_prompt, proposal_prompt, olostep_prompt)
-                VALUES (?, ?, ?, ?, ?)""",
-             ("Manual Jobs", "manual://jobs", "Extract keywords", "Generate proposal", "Find contact info"))
-    conn.commit()
-
-# Fix existing jobs without rss_source_id
-c.execute("SELECT id FROM rss_feeds WHERE name = 'Web Development'")
-web_dev_result = c.fetchone()
-c.execute("SELECT id FROM rss_feeds WHERE name = 'Manual Jobs'")
-manual_result = c.fetchone()
-
-if web_dev_result and manual_result:
-    web_dev_id = web_dev_result[0]
-    manual_id = manual_result[0]
-    
-    # Update jobs based on URL patterns
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%upwork.com%'", (manual_id,))
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL AND url LIKE '%vollna.com%'", (web_dev_id,))
-    c.execute("UPDATE jobs SET rss_source_id = ? WHERE rss_source_id IS NULL", (web_dev_id,))
-    conn.commit()
-
-conn.close()
-
 # Start all active RSS feeds
 system.start_all_active_feeds()
 

@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 import time
 import threading
 import traceback
-import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 app = Flask(__name__)
 app.secret_key = 'mindcrew_secret_key_2024'
@@ -450,87 +450,117 @@ class MultiRSSProposalSystem:
             return f"Error generating proposal: {e}", debug_log
     
     def get_work_examples(self, keywords):
-        """Get work examples using web scraping"""
-        examples = []
-        print(f"Searching for apps with keywords: {keywords}")
+        """Get work examples from Google Play Store"""
+        try:
+            from google_play_scraper import search
+            print(f"Google Play Scraper imported successfully")
+        except ImportError:
+            print("ERROR: google-play-scraper not installed")
+            return self.get_fallback_examples(keywords)
         
-        # Use requests to search Google Play Store directly
+        examples = []
+        print(f"Searching Google Play Store with keywords: {keywords}")
+        
+        # Search each keyword
         for i, keyword in enumerate(keywords[:2]):
             try:
                 print(f"Searching keyword {i+1}: '{keyword}'")
                 
-                # Search Google Play Store web interface
-                search_url = f"https://play.google.com/store/search?q={keyword.replace(' ', '+')}&c=apps"
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
+                # Try multiple countries to get results
+                countries = ['us', 'sg', 'in', 'gb']
+                apps_found = []
                 
-                response = requests.get(search_url, headers=headers, timeout=10)
-                print(f"Search response status: {response.status_code}")
+                for country in countries:
+                    try:
+                        results = search(
+                            keyword,
+                            lang="en",
+                            country=country,
+                            n_hits=10
+                        )
+                        
+                        if results:
+                            print(f"Found {len(results)} results for '{keyword}' in {country}")
+                            
+                            for app in results:
+                                try:
+                                    score = app.get('score') or 0
+                                    if score >= 3.0:  # Only good rated apps
+                                        app_data = {
+                                            'name': app.get('title', 'Unknown App'),
+                                            'description': str(app.get('description', 'No description'))[:200] + '...',
+                                            'url': f"https://play.google.com/store/apps/details?id={app.get('appId', '')}",
+                                            'installs': str(app.get('installs', '0')),
+                                            'score': score
+                                        }
+                                        apps_found.append(app_data)
+                                except Exception as e:
+                                    continue
+                            
+                            if len(apps_found) >= 5:  # Got enough apps
+                                break
+                                
+                    except Exception as e:
+                        print(f"Error searching {country}: {e}")
+                        continue
                 
-                if response.status_code == 200:
-                    # Extract app data from HTML (basic extraction)
-                    content = response.text
-                    
-                    # Simple regex to find app names and IDs
-                    import re
-                    app_matches = re.findall(r'href="/store/apps/details\?id=([^"]+)"[^>]*>([^<]+)', content)
-                    
-                    keyword_apps = []
-                    for app_id, app_name in app_matches[:5]:  # 5 per keyword
-                        if app_name and app_id:
-                            app_data = {
-                                'name': app_name.strip(),
-                                'description': f'A mobile application focused on {keyword} with advanced features and user-friendly interface...',
-                                'url': f'https://play.google.com/store/apps/details?id={app_id}',
-                                'installs': '10,000+',
-                                'score': round(random.uniform(4.0, 4.8), 1)
-                            }
-                            keyword_apps.append(app_data)
-                    
-                    examples.extend(keyword_apps)
-                    print(f"Found {len(keyword_apps)} apps for '{keyword}'")
-                else:
-                    print(f"Failed to search for '{keyword}': HTTP {response.status_code}")
-                    
+                # Add 5 apps per keyword
+                keyword_apps = apps_found[:5]
+                examples.extend(keyword_apps)
+                print(f"Added {len(keyword_apps)} real apps for '{keyword}'")
+                
             except Exception as e:
-                print(f"Error searching '{keyword}': {e}")
+                print(f"Error with keyword '{keyword}': {e}")
         
-        # If no real apps found, use curated examples based on keywords
-        if len(examples) < 5:
-            print(f"Only found {len(examples)} real apps, adding curated examples")
-            
-            # Generate relevant app examples based on keywords
-            curated_apps = self.generate_curated_examples(keywords)
-            examples.extend(curated_apps)
+        # If we got real apps, return them
+        if examples:
+            examples.sort(key=lambda x: x['score'], reverse=True)
+            print(f"Returning {len(examples)} real Google Play Store apps")
+            return examples[:10]
         
-        final_examples = examples[:10]
-        print(f"Returning {len(final_examples)} work examples")
-        return final_examples
+        # Fallback if no real apps found
+        print("No real apps found, using fallback")
+        return self.get_fallback_examples(keywords)
     
-    def generate_curated_examples(self, keywords):
-        """Generate relevant app examples based on keywords"""
-        curated = []
-        
-        # Create realistic app examples based on the keywords
-        for i, keyword in enumerate(keywords[:2]):
-            # Generate 3 apps per keyword
-            for j in range(3):
-                app_name = f"{keyword.title().replace(' ', '')} Pro"
-                if j == 1:
-                    app_name = f"Smart {keyword.title()}"
-                elif j == 2:
-                    app_name = f"{keyword.split()[0].title()} Master" if ' ' in keyword else f"{keyword.title()} Plus"
-                
-                curated.append({
-                    'name': app_name,
-                    'description': f'Professional {keyword} application with advanced features, intuitive design, and seamless user experience. Highly rated by users worldwide...',
-                    'url': f'https://play.google.com/store/apps/details?id=com.{keyword.replace(" ", "").lower()}.app{j+1}',
-                    'installs': random.choice(['50,000+', '100,000+', '500,000+', '1,000,000+']),
-                    'score': round(random.uniform(4.2, 4.7), 1)
-                })
-        
-        return curated
+    def get_fallback_examples(self, keywords):
+        """Fallback examples when Google Play Store fails"""
+        return [
+            {
+                'name': 'ChatGPT',
+                'description': 'The official ChatGPT app by OpenAI. Get instant answers, find creative inspiration, learn something new...',
+                'url': 'https://play.google.com/store/apps/details?id=com.openai.chatgpt',
+                'installs': '50,000,000+',
+                'score': 4.5
+            },
+            {
+                'name': 'Google Assistant',
+                'description': 'Meet your Google Assistant. Ask it questions. Tell it to do things. It is your own personal Google...',
+                'url': 'https://play.google.com/store/apps/details?id=com.google.android.apps.googleassistant',
+                'installs': '1,000,000,000+',
+                'score': 4.1
+            },
+            {
+                'name': 'Replika: My AI Friend',
+                'description': 'Replika is an AI companion who is eager to learn and would love to see the world through your eyes...',
+                'url': 'https://play.google.com/store/apps/details?id=ai.replika.app',
+                'installs': '10,000,000+',
+                'score': 4.2
+            },
+            {
+                'name': 'Speechify Text to Speech Voice',
+                'description': 'Listen to docs, articles, PDFs, email — anything you read — by adding audio to any text with Speechify...',
+                'url': 'https://play.google.com/store/apps/details?id=com.cliffweitzman.speechify2',
+                'installs': '5,000,000+',
+                'score': 4.4
+            },
+            {
+                'name': 'Voice Recorder',
+                'description': 'Simple and reliable voice recorder that allows you to record voice memos and important meetings...',
+                'url': 'https://play.google.com/store/apps/details?id=com.media.bestrecorder.audiorecorder',
+                'installs': '100,000,000+',
+                'score': 4.6
+            }
+        ]
     
     def import_team_profiles(self, cursor, is_postgres=False):
         """Import team profiles from CSV data"""

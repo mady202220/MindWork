@@ -716,11 +716,11 @@ def enriched_jobs():
     c = conn.cursor()
     is_postgres = os.getenv('DATABASE_URL') is not None
     
-    # Order by enrichment time (when job was enriched), fallback to posted_date
+    # Order by posted_date since enriched_at column doesn't exist in PostgreSQL yet
     if is_postgres:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY COALESCE(CAST(enriched_at AS TIMESTAMP), CAST(posted_date AS TIMESTAMP)) DESC")
+        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC")
     else:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY COALESCE(datetime(enriched_at), datetime(posted_date)) DESC")
+        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY datetime(posted_date) DESC")
     jobs = c.fetchall()
     conn.close()
     return render_template('enriched_jobs.html', jobs=jobs)
@@ -1079,13 +1079,12 @@ def enrich_client():
                         client_name = %s, client_company = %s, 
                         client_city = %s, client_country = %s, linkedin_url = %s, 
                         email = %s, phone = %s, whatsapp = %s, enriched = 1,
-                        decision_maker = %s, enriched_by = %s, enriched_at = %s
+                        decision_maker = %s, enriched_by = %s
                         WHERE id = %s""",
                      (final_person_name, final_company_name, 
                       city, country, result.get('linkedin', ''), 
                       result.get('email', ''), result.get('phone', ''), 
-                      result.get('whatsapp', ''), search_target, enrichment_author, 
-                      datetime.now().isoformat(), job_id))
+                      result.get('whatsapp', ''), search_target, enrichment_author, job_id))
         else:
             c.execute("""UPDATE jobs SET 
                         client_name = ?, client_company = ?, 
@@ -1274,21 +1273,20 @@ def update_enrichment():
         except:
             pass  # Column already exists
     
-    # Add status_updated_at timestamp when status changes
-    status_updated_at = datetime.now().isoformat() if data.get('proposal_status') or data.get('submitted_by') else None
-    
     if is_postgres:
         c.execute("""UPDATE jobs SET 
                     client_name=%s, client_company=%s, client_city=%s, client_country=%s,
                     linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, 
-                    outreach_status=%s, proposal_status=%s, submitted_by=%s, status_updated_at=%s
+                    outreach_status=%s, proposal_status=%s, submitted_by=%s
                     WHERE id=%s""",
                  (data['client_name'], data['client_company'],
                   data['client_city'], data['client_country'], data['linkedin_url'], 
                   data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
                   data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
-                  data.get('submitted_by', ''), status_updated_at, job_id))
+                  data.get('submitted_by', ''), job_id))
     else:
+        # Add status_updated_at timestamp when status changes (SQLite only)
+        status_updated_at = datetime.now().isoformat() if data.get('proposal_status') or data.get('submitted_by') else None
         c.execute("""UPDATE jobs SET 
                     client_name=?, client_company=?, client_city=?, client_country=?,
                     linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, 

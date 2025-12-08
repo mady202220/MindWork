@@ -147,9 +147,13 @@ class MultiRSSProposalSystem:
             'site TEXT'
         ]
         
+        # Commit table creation before checking counts
+        conn.commit()
+        
         for column in columns_to_add:
             try:
                 c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
+                conn.commit()
             except Exception as e:
                 conn.rollback()  # Rollback failed transaction
                 pass  # Column already exists
@@ -158,6 +162,7 @@ class MultiRSSProposalSystem:
         c.execute("SELECT COUNT(*) FROM team_profiles")
         if c.fetchone()[0] == 0:
             self.import_team_profiles(c, is_postgres)
+            conn.commit()
         
         # Insert default RSS feeds if none exists
         c.execute("SELECT COUNT(*) FROM rss_feeds")
@@ -231,8 +236,8 @@ class MultiRSSProposalSystem:
                             VALUES (?, ?, ?, ?, ?)""",
                          ("Manual Jobs", "manual://jobs",
                           default_keyword_prompt, default_proposal_prompt, default_olostep_prompt))
+            conn.commit()
         
-        conn.commit()
         conn.close()
         
     def get_rss_feeds(self):

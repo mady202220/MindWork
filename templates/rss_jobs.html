@@ -70,6 +70,28 @@
         
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Search jobs by title, client, or description..." onkeyup="searchJobs()">
+            
+            <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                <select id="statusFilter" onchange="filterJobs()" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
+                    <option value="">All Statuses</option>
+                    <option value="Not Submitted">Not Submitted</option>
+                    <option value="Saved">Saved</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Proposal Viewed">Proposal Viewed</option>
+                    <option value="Message Received">Message Received</option>
+                    <option value="Absconding">Absconding</option>
+                    <option value="Lost">Lost</option>
+                    <option value="Won">Won</option>
+                </select>
+                
+                <select id="submitterFilter" onchange="filterJobs()" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
+                    <option value="">All Submitters</option>
+                    <option value="Ashish">Ashish</option>
+                    <option value="Madhuri">Madhuri</option>
+                </select>
+                
+                <button onclick="clearFilters()" class="btn btn-outline btn-sm">Clear Filters</button>
+            </div>
         </div>
 
         {% if jobs|length == 0 %}
@@ -92,7 +114,9 @@
                 {% endif %}
                 <div style="margin-top: 10px;">
                     {% if job[7] == 1 %}<span style="color: green; margin-right: 10px;">✓ Processed</span>{% endif %}
-                    {% if job[17] == 1 %}<span style="color: blue;">🔍 Enriched</span>{% endif %}
+                    {% if job[17] == 1 %}<span style="color: blue; margin-right: 10px;">🔍 Enriched</span>{% endif %}
+                    {% if job|length > 22 and job[22] %}<span style="color: purple; margin-right: 10px;">📊 Status: {{ job[22] }}</span>{% endif %}
+                    {% if job|length > 23 and job[23] %}<span style="color: orange;">👤 By: {{ job[23] }}</span>{% endif %}
                 </div>
             </div>
             <div class="job-description">{{ job[2][:200] }}...</div>
@@ -102,7 +126,7 @@
                 <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
                 
                 <!-- Job Status Dropdowns -->
-                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;">
+                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[22] if job|length > 22 else 'Not Submitted' }}">
                     <option value="Not Submitted">Not Submitted</option>
                     <option value="Saved">Saved</option>
                     <option value="Submitted">Submitted</option>
@@ -113,7 +137,7 @@
                     <option value="Won">Won</option>
                 </select>
                 
-                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;">
+                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[23] if job|length > 23 else '' }}">
                     <option value="">Not Selected</option>
                     <option value="Ashish">Ashish</option>
                     <option value="Madhuri">Madhuri</option>
@@ -447,6 +471,14 @@
             }
         }
         
+        // Set current values for dropdowns
+        document.querySelectorAll('select[data-current]').forEach(select => {
+            const currentValue = select.getAttribute('data-current');
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        });
+        
         updateStats();
         setInterval(() => location.reload(), 600000);
         
@@ -499,7 +531,13 @@
         }
         
         function searchJobs() {
+            filterJobs();
+        }
+        
+        function filterJobs() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const submitterFilter = document.getElementById('submitterFilter').value;
             const jobCards = document.querySelectorAll('.job-card');
             
             jobCards.forEach(card => {
@@ -507,12 +545,28 @@
                 const meta = card.querySelector('.job-meta').textContent.toLowerCase();
                 const description = card.querySelector('.job-description').textContent.toLowerCase();
                 
-                if (title.includes(searchTerm) || meta.includes(searchTerm) || description.includes(searchTerm)) {
+                // Search filter
+                const matchesSearch = !searchTerm || title.includes(searchTerm) || meta.includes(searchTerm) || description.includes(searchTerm);
+                
+                // Status filter
+                const statusMatch = !statusFilter || meta.includes(`Status: ${statusFilter}`);
+                
+                // Submitter filter
+                const submitterMatch = !submitterFilter || meta.includes(`By: ${submitterFilter}`);
+                
+                if (matchesSearch && statusMatch && submitterMatch) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';
                 }
             });
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('submitterFilter').value = '';
+            filterJobs();
         }
     </script>
 </body>

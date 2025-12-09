@@ -251,7 +251,18 @@ class MultiRSSProposalSystem:
     def get_jobs_by_rss(self, rss_id):
         conn = self.get_db_connection()
         c = conn.cursor()
-        if os.getenv('DATABASE_URL'):
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        # Add missing columns if they don't exist (PostgreSQL should have them)
+        if not is_postgres:
+            for column in ['proposal_status TEXT DEFAULT "Not Submitted"', 'submitted_by TEXT']:
+                try:
+                    c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
+                    conn.commit()
+                except:
+                    pass
+        
+        if is_postgres:
             c.execute("SELECT * FROM jobs WHERE rss_source_id = %s AND enriched != 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC", (rss_id,))
         else:
             c.execute("SELECT * FROM jobs WHERE rss_source_id = ? AND enriched != 1 ORDER BY datetime(posted_date) DESC", (rss_id,))
@@ -1259,48 +1270,50 @@ def job_detail(job_id):
 
 @app.route('/update_enrichment', methods=['POST'])
 def update_enrichment():
-    data = request.json
-    job_id = data['job_id']
-    
-    conn = system.get_db_connection()
-    c = conn.cursor()
-    is_postgres = os.getenv('DATABASE_URL') is not None
-    
-    # Add outreach_status column if it doesn't exist (skip for PostgreSQL)
-    if not is_postgres:
-        try:
-            c.execute('ALTER TABLE jobs ADD COLUMN outreach_status TEXT DEFAULT "Pending"')
-        except:
-            pass  # Column already exists
-    
-    if is_postgres:
-        c.execute("""UPDATE jobs SET 
-                    client_name=%s, client_company=%s, client_city=%s, client_country=%s,
-                    linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, 
-                    outreach_status=%s, proposal_status=%s, submitted_by=%s
-                    WHERE id=%s""",
-                 (data['client_name'], data['client_company'],
-                  data['client_city'], data['client_country'], data['linkedin_url'], 
-                  data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
-                  data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
-                  data.get('submitted_by', ''), job_id))
-    else:
-        # Add status_updated_at timestamp when status changes (SQLite only)
-        status_updated_at = datetime.now().isoformat() if data.get('proposal_status') or data.get('submitted_by') else None
-        c.execute("""UPDATE jobs SET 
-                    client_name=?, client_company=?, client_city=?, client_country=?,
-                    linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, 
-                    outreach_status=?, proposal_status=?, submitted_by=?, status_updated_at=?
-                    WHERE id=?""",
-                 (data['client_name'], data['client_company'],
-                  data['client_city'], data['client_country'], data['linkedin_url'], 
-                  data['email'], data['phone'], data['whatsapp'], data['decision_maker'], 
-                  data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
-                  data.get('submitted_by', ''), status_updated_at, job_id))
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True})
+    try:
+        data = request.json
+        job_id = data['job_id']
+        
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        # Add columns if they don't exist (PostgreSQL should have them)
+        if not is_postgres:
+            for column in ['outreach_status TEXT DEFAULT "Pending"', 'proposal_status TEXT DEFAULT "Not Submitted"', 'submitted_by TEXT']:
+                try:
+                    c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
+                except:
+                    pass
+        
+        if is_postgres:
+            c.execute("""UPDATE jobs SET 
+                        client_name=%s, client_company=%s, client_city=%s, client_country=%s,
+                        linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, 
+                        outreach_status=%s, proposal_status=%s, submitted_by=%s
+                        WHERE id=%s""",
+                     (data.get('client_name', ''), data.get('client_company', ''),
+                      data.get('client_city', ''), data.get('client_country', ''), data.get('linkedin_url', ''), 
+                      data.get('email', ''), data.get('phone', ''), data.get('whatsapp', ''), data.get('decision_maker', ''), 
+                      data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
+                      data.get('submitted_by', ''), job_id))
+        else:
+            c.execute("""UPDATE jobs SET 
+                        client_name=?, client_company=?, client_city=?, client_country=?,
+                        linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, 
+                        outreach_status=?, proposal_status=?, submitted_by=?
+                        WHERE id=?""",
+                     (data.get('client_name', ''), data.get('client_company', ''),
+                      data.get('client_city', ''), data.get('client_country', ''), data.get('linkedin_url', ''), 
+                      data.get('email', ''), data.get('phone', ''), data.get('whatsapp', ''), data.get('decision_maker', ''), 
+                      data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
+                      data.get('submitted_by', ''), job_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/delete_job/<job_id>', methods=['POST'])
 def delete_job(job_id):
@@ -1910,6 +1923,68 @@ def check_db_type():
         'database_url': os.getenv('DATABASE_URL', 'Not set')[:50] + '...' if os.getenv('DATABASE_URL') else 'Not set',
         'using_postgres': bool(os.getenv('DATABASE_URL'))
     })
+
+@app.route('/add-status-columns', methods=['POST'])
+def add_status_columns():
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        if is_postgres:
+            # Add columns to PostgreSQL
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN proposal_status TEXT DEFAULT \'Not Submitted\'')
+                conn.commit()
+            except Exception as e:
+                if 'already exists' not in str(e):
+                    conn.rollback()
+                    
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN submitted_by TEXT')
+                conn.commit()
+            except Exception as e:
+                if 'already exists' not in str(e):
+                    conn.rollback()
+                    
+            try:
+                c.execute('ALTER TABLE jobs ADD COLUMN enriched_by TEXT')
+                conn.commit()
+            except Exception as e:
+                if 'already exists' not in str(e):
+                    conn.rollback()
+        
+        conn.close()
+        return jsonify({'success': True, 'message': 'Status columns added successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# Add missing columns on startup for PostgreSQL
+if os.getenv('DATABASE_URL'):
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        
+        # Add missing columns if they don't exist
+        columns_to_add = [
+            ('proposal_status', 'TEXT DEFAULT \'Not Submitted\''),
+            ('submitted_by', 'TEXT'),
+            ('enriched_by', 'TEXT')
+        ]
+        
+        for column_name, column_def in columns_to_add:
+            try:
+                c.execute(f'ALTER TABLE jobs ADD COLUMN {column_name} {column_def}')
+                conn.commit()
+                print(f"Added column {column_name} to jobs table")
+            except Exception as e:
+                if 'already exists' not in str(e).lower():
+                    print(f"Error adding column {column_name}: {e}")
+                conn.rollback()
+        
+        conn.close()
+    except Exception as e:
+        print(f"Error adding columns: {e}")
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

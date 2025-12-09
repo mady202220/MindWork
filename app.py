@@ -1929,6 +1929,40 @@ def check_db_type():
         'using_postgres': bool(os.getenv('DATABASE_URL'))
     })
 
+@app.route('/debug-columns')
+def debug_columns():
+    conn = system.get_db_connection()
+    c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    # Get column names
+    if is_postgres:
+        c.execute("""
+            SELECT column_name, ordinal_position, data_type 
+            FROM information_schema.columns 
+            WHERE table_name = 'jobs' 
+            ORDER BY ordinal_position
+        """)
+        columns = c.fetchall()
+        column_list = [{'name': col[0], 'position': col[1], 'type': col[2]} for col in columns]
+    else:
+        c.execute("PRAGMA table_info(jobs)")
+        columns = c.fetchall()
+        column_list = [{'name': col[1], 'position': col[0], 'type': col[2]} for col in columns]
+    
+    # Get a sample job
+    c.execute("SELECT * FROM jobs LIMIT 1")
+    sample_job = c.fetchone()
+    
+    conn.close()
+    
+    return jsonify({
+        'database_type': 'PostgreSQL' if is_postgres else 'SQLite',
+        'columns': column_list,
+        'sample_job_length': len(sample_job) if sample_job else 0,
+        'column_count': len(column_list)
+    })
+
 @app.route('/add-status-columns', methods=['POST'])
 def add_status_columns():
     try:

@@ -115,8 +115,8 @@
                 <div style="margin-top: 10px;">
                     {% if job[7] == 1 %}<span style="color: green; margin-right: 10px;">✓ Processed</span>{% endif %}
                     {% if job[17] == 1 %}<span style="color: blue; margin-right: 10px;">🔍 Enriched</span>{% endif %}
-                    {% if job|length > 22 and job[22] %}<span style="color: purple; margin-right: 10px;">📊 Status: {{ job[22] }}</span>{% endif %}
-                    {% if job|length > 23 and job[23] %}<span style="color: orange;">👤 By: {{ job[23] }}</span>{% endif %}
+                    {% if job|length > 25 and job[25] %}<span style="color: purple; margin-right: 10px;">📊 Status: {{ job[25] }}</span>{% endif %}
+                    {% if job|length > 26 and job[26] %}<span style="color: orange;">👤 By: {{ job[26] }}</span>{% endif %}
                 </div>
             </div>
             <div class="job-description">{{ job[2][:200] }}...</div>
@@ -126,7 +126,7 @@
                 <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
                 
                 <!-- Job Status Dropdowns -->
-                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[22] if job|length > 22 else 'Not Submitted' }}">
+                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[25] if job|length > 25 else 'Not Submitted' }}">
                     <option value="Not Submitted">Not Submitted</option>
                     <option value="Saved">Saved</option>
                     <option value="Submitted">Submitted</option>
@@ -137,7 +137,7 @@
                     <option value="Won">Won</option>
                 </select>
                 
-                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[23] if job|length > 23 else '' }}">
+                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[26] if job|length > 26 else '' }}">
                     <option value="">Not Selected</option>
                     <option value="Ashish">Ashish</option>
                     <option value="Madhuri">Madhuri</option>

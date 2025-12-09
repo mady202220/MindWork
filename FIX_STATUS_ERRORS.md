@@ -5,7 +5,11 @@ You were experiencing errors when trying to update job statuses on two pages:
 1. **RSS Feed Pages** - When changing proposal status or submitted by dropdowns
 2. **Enriched Jobs Page** - When changing outreach status or proposal status
 
-## Root Cause
+The status would say "updated successfully" but when reloading the page, the values would be blank again.
+
+## Root Causes (2 Issues Fixed)
+
+### Issue 1: Missing Database Columns
 The database was missing the following columns in the `jobs` table:
 - `outreach_status` - Tracks if outreach has been sent (Pending/Sent)
 - `proposal_status` - Tracks proposal submission status (Not Submitted, Saved, Submitted, etc.)
@@ -75,6 +79,21 @@ The fix works for both:
 - **PostgreSQL** (production on Railway)
 - **SQLite** (local development)
 
+### Issue 2: Wrong Column Indices in Template
+The RSS jobs template was using incorrect column indices to read the status values:
+- Was using `job[22]` for proposal_status (actually the `site` column)
+- Was using `job[23]` for submitted_by (actually the `rss_source_id` column)
+
+**Correct indices:**
+- `job[24]` = outreach_status
+- `job[25]` = proposal_status  
+- `job[26]` = submitted_by
+- `job[27]` = enriched_at
+- `job[28]` = enriched_by
+
+This happened because when you use `ALTER TABLE ADD COLUMN`, the new columns are added at the END of the table, not where you might expect them.
+
 ## Files Modified
-1. `MindWork/app.py` - Added columns to init_db() and created fix endpoint
+1. `MindWork/app.py` - Added columns to init_db(), created fix endpoint, and debug endpoint
 2. `MindWork/templates/admin.html` - Added database maintenance section
+3. `MindWork/templates/rss_jobs.html` - Fixed column indices from [22],[23] to [25],[26]

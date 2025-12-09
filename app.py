@@ -2034,6 +2034,70 @@ def check_db_type():
         'using_postgres': bool(os.getenv('DATABASE_URL'))
     })
 
+@app.route('/fix-null-statuses', methods=['POST'])
+def fix_null_statuses():
+    """Set default values for NULL status fields"""
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        if is_postgres:
+            c.execute("""
+                UPDATE jobs 
+                SET proposal_status = 'Not Submitted' 
+                WHERE proposal_status IS NULL
+            """)
+            rows1 = c.rowcount
+            
+            c.execute("""
+                UPDATE jobs 
+                SET outreach_status = 'Pending' 
+                WHERE outreach_status IS NULL
+            """)
+            rows2 = c.rowcount
+            
+            c.execute("""
+                UPDATE jobs 
+                SET submitted_by = '' 
+                WHERE submitted_by IS NULL
+            """)
+            rows3 = c.rowcount
+        else:
+            c.execute("""
+                UPDATE jobs 
+                SET proposal_status = 'Not Submitted' 
+                WHERE proposal_status IS NULL
+            """)
+            rows1 = c.rowcount
+            
+            c.execute("""
+                UPDATE jobs 
+                SET outreach_status = 'Pending' 
+                WHERE outreach_status IS NULL
+            """)
+            rows2 = c.rowcount
+            
+            c.execute("""
+                UPDATE jobs 
+                SET submitted_by = '' 
+                WHERE submitted_by IS NULL
+            """)
+            rows3 = c.rowcount
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'proposal_status_fixed': rows1,
+            'outreach_status_fixed': rows2,
+            'submitted_by_fixed': rows3,
+            'total_fixed': rows1 + rows2 + rows3
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/test-job-data/<job_id>')
 def test_job_data(job_id):
     """Test endpoint to see actual job data"""

@@ -108,9 +108,9 @@
                 <div><strong>Client:</strong> {{ job[4] }} | <strong>Posted:</strong> {{ job[6][:10] }}</div>
                 <div><strong>Budget:</strong> {{ job[5] }}</div>
                 {% if job|length > 17 %}
-                    <div><strong>Hourly Rate:</strong> {{ job[20] or 'Not specified' }}</div>
-                    <div><strong>Skills:</strong> {{ job[18] or 'Not specified' }}</div>
-                    <div><strong>Categories:</strong> {{ job[19] or 'Not specified' }}</div>
+                    <div><strong>Hourly Rate:</strong> {{ job[21] or 'Not specified' }}</div>
+                    <div><strong>Skills:</strong> {{ job[19] or 'Not specified' }}</div>
+                    <div><strong>Categories:</strong> {{ job[20] or 'Not specified' }}</div>
                 {% endif %}
                 <div style="margin-top: 10px;">
                     {% if job[7] == 1 %}<span style="color: green; margin-right: 10px;">✓ Processed</span>{% endif %}

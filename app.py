@@ -265,10 +265,17 @@ class MultiRSSProposalSystem:
                     c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
                     conn.commit()
                 except:
+                    conn.rollback()
                     pass
         
         if is_postgres:
-            c.execute("SELECT * FROM jobs WHERE rss_source_id = %s AND enriched != 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC", (rss_id,))
+            c.execute("""SELECT id, title, description, url, client, budget, posted_date, processed,
+                         client_type, client_name, client_company, client_city, client_country, 
+                         linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
+                         categories, hourly_rate, site, rss_source_id, outreach_status, 
+                         proposal_status, submitted_by, enriched_at, enriched_by
+                         FROM jobs WHERE rss_source_id = %s AND enriched != 1 
+                         ORDER BY CAST(posted_date AS TIMESTAMP) DESC""", (rss_id,))
         else:
             c.execute("SELECT * FROM jobs WHERE rss_source_id = ? AND enriched != 1 ORDER BY datetime(posted_date) DESC", (rss_id,))
         jobs = c.fetchall()
@@ -734,7 +741,12 @@ def enriched_jobs():
     
     # Order by posted_date since enriched_at column doesn't exist in PostgreSQL yet
     if is_postgres:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC")
+        c.execute("""SELECT id, title, description, url, client, budget, posted_date, processed,
+                     client_type, client_name, client_company, client_city, client_country, 
+                     linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
+                     categories, hourly_rate, site, rss_source_id, outreach_status, 
+                     proposal_status, submitted_by, enriched_at, enriched_by
+                     FROM jobs WHERE enriched = 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
     else:
         c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY datetime(posted_date) DESC")
     jobs = c.fetchall()
@@ -1348,7 +1360,9 @@ def update_enrichment():
             for column in ['outreach_status TEXT DEFAULT "Pending"', 'proposal_status TEXT DEFAULT "Not Submitted"', 'submitted_by TEXT']:
                 try:
                     c.execute(f'ALTER TABLE jobs ADD COLUMN {column}')
+                    conn.commit()
                 except:
+                    conn.rollback()
                     pass
         
         # Build UPDATE query dynamically to only update provided fields
@@ -1378,6 +1392,7 @@ def update_enrichment():
                 update_values.append(data[data_key])
         
         if not update_fields:
+            conn.close()
             return jsonify({'success': False, 'error': 'No fields to update'})
         
         # Add job_id to the end

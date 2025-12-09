@@ -261,7 +261,7 @@
         {% endif %}
 
         {% for job in jobs %}
-        <div class="job-card" data-enriched-by="{{ job[27] or '' }}">
+        <div class="job-card" data-enriched-by="{{ job[28] or '' }}">
             <div class="job-header">
                 <h3 class="job-title">{{ job[1] }}</h3>
                 <div class="job-meta">
@@ -283,9 +283,9 @@
             <div style="padding: var(--space-4); background: var(--gray-50); border-radius: 8px; margin: 16px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <div>
-                        <strong>📞 {{ job[10] or 'No Name' }}</strong> • 
-                        <span>🏢 {{ job[11] or 'No Company' }}</span> • 
-                        <span>📍 {{ job[12] or 'Unknown' }}, {{ job[13] or 'Unknown' }}</span>
+                        <strong>📞 {{ job[9] or 'No Name' }}</strong> • 
+                        <span>🏢 {{ job[10] or 'No Company' }}</span> • 
+                        <span>📍 {{ job[11] or 'Unknown' }}, {{ job[12] or 'Unknown' }}</span>
                     </div>
                     <button class="btn btn-outline btn-sm" onclick="toggleEnrichmentDetails('{{ job[0] }}')">
                         📋 View Details
@@ -306,39 +306,39 @@
                     <div class="contact-grid">
                         <div class="contact-item">
                             <label class="contact-label">👤 Contact Name</label>
-                            <input type="text" id="name-{{ job[0] }}" value="{{ job[10] or '' }}" class="contact-input">
+                            <input type="text" id="name-{{ job[0] }}" value="{{ job[9] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🏢 Company</label>
-                            <input type="text" id="company-{{ job[0] }}" value="{{ job[11] or '' }}" class="contact-input">
+                            <input type="text" id="company-{{ job[0] }}" value="{{ job[10] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🌆 City</label>
-                            <input type="text" id="city-{{ job[0] }}" value="{{ job[12] or '' }}" class="contact-input">
+                            <input type="text" id="city-{{ job[0] }}" value="{{ job[11] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🌍 Country</label>
-                            <input type="text" id="country-{{ job[0] }}" value="{{ job[13] or '' }}" class="contact-input">
+                            <input type="text" id="country-{{ job[0] }}" value="{{ job[12] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🔗 LinkedIn</label>
-                            <input type="text" id="linkedin-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
+                            <input type="text" id="linkedin-{{ job[0] }}" value="{{ job[13] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">✉️ Email</label>
-                            <input type="text" id="email-{{ job[0] }}" value="{{ job[15] or '' }}" class="contact-input">
+                            <input type="text" id="email-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📞 Phone</label>
-                            <input type="text" id="phone-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
+                            <input type="text" id="phone-{{ job[0] }}" value="{{ job[15] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📱 WhatsApp</label>
-                            <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[17] or '' }}" class="contact-input">
+                            <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🎯 Decision Maker</label>
-                            <input type="text" id="decision-{{ job[0] }}" value="{{ job[19] or '' }}" class="contact-input">
+                            <input type="text" id="decision-{{ job[0] }}" value="{{ job[18] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📤 Outreach Status</label>

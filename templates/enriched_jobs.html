@@ -261,7 +261,7 @@
         {% endif %}
 
         {% for job in jobs %}
-        <div class="job-card" data-enriched-by="{{ job[28] or '' }}">
+        <div class="job-card" data-enriched-by="{{ job[28] or '' }}" data-proposal-status="{{ job[25] or 'Not Submitted' }}" data-submitted-by="{{ job[26] or '' }}">
             <div class="job-header">
                 <h3 class="job-title">{{ job[1] }}</h3>
                 <div class="job-meta">
@@ -468,6 +468,12 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
+                    // Update data attributes for filtering
+                    const card = document.getElementById(`enrichment-details-${jobId}`).closest('.job-card');
+                    if (card) {
+                        card.setAttribute('data-proposal-status', data.proposal_status);
+                        card.setAttribute('data-submitted-by', data.submitted_by);
+                    }
                     alert('Enrichment data updated successfully!');
                 } else {
                     alert('Failed to update enrichment data');
@@ -518,13 +524,9 @@
                 const name = nameInput ? nameInput.value.toLowerCase() : '';
                 const company = companyInput ? companyInput.value.toLowerCase() : '';
                 
-                // Get current values from dropdowns
-                const proposalStatusSelect = card.querySelector('select[id*="proposal-status-"]');
-                const submittedBySelect = card.querySelector('select[id*="submitted-by-"]');
-                const currentProposalStatus = proposalStatusSelect ? proposalStatusSelect.value : '';
-                const currentSubmittedBy = submittedBySelect ? submittedBySelect.value : '';
-                
-                // Get enriched by from job data (you'll need to add this to the template)
+                // Get values from data attributes
+                const currentProposalStatus = card.getAttribute('data-proposal-status') || '';
+                const currentSubmittedBy = card.getAttribute('data-submitted-by') || '';
                 const enrichedBy = card.getAttribute('data-enriched-by') || '';
                 
                 // Apply filters

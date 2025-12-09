@@ -1273,11 +1273,71 @@ def job_detail(job_id):
     else:
         return "No RSS feeds configured", 404
 
+@app.route('/update_job_status', methods=['POST'])
+def update_job_status():
+    """Update only the status fields without touching enrichment data"""
+    try:
+        data = request.json
+        job_id = data['job_id']
+        proposal_status = data.get('proposal_status', 'Not Submitted')
+        submitted_by = data.get('submitted_by', '')
+        outreach_status = data.get('outreach_status', 'Pending')
+        
+        print(f"[UPDATE_JOB_STATUS] Job: {job_id}, Proposal: {proposal_status}, By: {submitted_by}, Outreach: {outreach_status}")
+        
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        if is_postgres:
+            c.execute("""UPDATE jobs SET 
+                        proposal_status=%s, submitted_by=%s, outreach_status=%s
+                        WHERE id=%s""",
+                     (proposal_status, submitted_by, outreach_status, job_id))
+        else:
+            c.execute("""UPDATE jobs SET 
+                        proposal_status=?, submitted_by=?, outreach_status=?
+                        WHERE id=?""",
+                     (proposal_status, submitted_by, outreach_status, job_id))
+        
+        rows_affected = c.rowcount
+        conn.commit()
+        
+        print(f"[UPDATE_JOB_STATUS] Updated {rows_affected} rows")
+        
+        # Verify
+        if is_postgres:
+            c.execute("SELECT proposal_status, submitted_by, outreach_status FROM jobs WHERE id=%s", (job_id,))
+        else:
+            c.execute("SELECT proposal_status, submitted_by, outreach_status FROM jobs WHERE id=?", (job_id,))
+        
+        result = c.fetchone()
+        print(f"[UPDATE_JOB_STATUS] Verified values: {result}")
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'rows_affected': rows_affected,
+            'updated_values': {
+                'proposal_status': result[0] if result else None,
+                'submitted_by': result[1] if result else None,
+                'outreach_status': result[2] if result else None
+            }
+        })
+    except Exception as e:
+        print(f"[UPDATE_JOB_STATUS] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/update_enrichment', methods=['POST'])
 def update_enrichment():
     try:
         data = request.json
         job_id = data['job_id']
+        
+        print(f"[UPDATE_ENRICHMENT] Received data for job {job_id}: {data}")
         
         conn = system.get_db_connection()
         c = conn.cursor()
@@ -1291,33 +1351,78 @@ def update_enrichment():
                 except:
                     pass
         
+        # Build UPDATE query dynamically to only update provided fields
+        update_fields = []
+        update_values = []
+        
+        # Map of field names to data keys
+        field_mapping = {
+            'client_name': 'client_name',
+            'client_company': 'client_company',
+            'client_city': 'client_city',
+            'client_country': 'client_country',
+            'linkedin_url': 'linkedin_url',
+            'email': 'email',
+            'phone': 'phone',
+            'whatsapp': 'whatsapp',
+            'decision_maker': 'decision_maker',
+            'outreach_status': 'outreach_status',
+            'proposal_status': 'proposal_status',
+            'submitted_by': 'submitted_by'
+        }
+        
+        # Only include fields that are present in the request
+        for db_field, data_key in field_mapping.items():
+            if data_key in data:
+                update_fields.append(db_field)
+                update_values.append(data[data_key])
+        
+        if not update_fields:
+            return jsonify({'success': False, 'error': 'No fields to update'})
+        
+        # Add job_id to the end
+        update_values.append(job_id)
+        
         if is_postgres:
-            c.execute("""UPDATE jobs SET 
-                        client_name=%s, client_company=%s, client_city=%s, client_country=%s,
-                        linkedin_url=%s, email=%s, phone=%s, whatsapp=%s, decision_maker=%s, 
-                        outreach_status=%s, proposal_status=%s, submitted_by=%s
-                        WHERE id=%s""",
-                     (data.get('client_name', ''), data.get('client_company', ''),
-                      data.get('client_city', ''), data.get('client_country', ''), data.get('linkedin_url', ''), 
-                      data.get('email', ''), data.get('phone', ''), data.get('whatsapp', ''), data.get('decision_maker', ''), 
-                      data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
-                      data.get('submitted_by', ''), job_id))
+            placeholders = ', '.join([f"{field}=%s" for field in update_fields])
+            query = f"UPDATE jobs SET {placeholders} WHERE id=%s"
         else:
-            c.execute("""UPDATE jobs SET 
-                        client_name=?, client_company=?, client_city=?, client_country=?,
-                        linkedin_url=?, email=?, phone=?, whatsapp=?, decision_maker=?, 
-                        outreach_status=?, proposal_status=?, submitted_by=?
-                        WHERE id=?""",
-                     (data.get('client_name', ''), data.get('client_company', ''),
-                      data.get('client_city', ''), data.get('client_country', ''), data.get('linkedin_url', ''), 
-                      data.get('email', ''), data.get('phone', ''), data.get('whatsapp', ''), data.get('decision_maker', ''), 
-                      data.get('outreach_status', 'Pending'), data.get('proposal_status', 'Not Submitted'),
-                      data.get('submitted_by', ''), job_id))
+            placeholders = ', '.join([f"{field}=?" for field in update_fields])
+            query = f"UPDATE jobs SET {placeholders} WHERE id=?"
+        
+        print(f"[UPDATE_ENRICHMENT] Query: {query}")
+        print(f"[UPDATE_ENRICHMENT] Values: {update_values}")
+        
+        c.execute(query, tuple(update_values))
+        rows_affected = c.rowcount
+        
         conn.commit()
+        print(f"[UPDATE_ENRICHMENT] Updated {rows_affected} rows for job {job_id}")
+        
+        # Verify the update
+        if is_postgres:
+            c.execute("SELECT proposal_status, submitted_by, outreach_status FROM jobs WHERE id=%s", (job_id,))
+        else:
+            c.execute("SELECT proposal_status, submitted_by, outreach_status FROM jobs WHERE id=?", (job_id,))
+        
+        result = c.fetchone()
+        print(f"[UPDATE_ENRICHMENT] Verification - Current values: {result}")
+        
         conn.close()
         
-        return jsonify({'success': True})
+        return jsonify({
+            'success': True, 
+            'rows_affected': rows_affected,
+            'current_values': {
+                'proposal_status': result[0] if result else None,
+                'submitted_by': result[1] if result else None,
+                'outreach_status': result[2] if result else None
+            }
+        })
     except Exception as e:
+        print(f"[UPDATE_ENRICHMENT] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/delete_job/<job_id>', methods=['POST'])

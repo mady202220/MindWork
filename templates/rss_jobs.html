@@ -499,33 +499,29 @@
             const proposalStatus = document.getElementById(`job-proposal-status-${jobId}`).value;
             const submittedBy = document.getElementById(`job-submitted-by-${jobId}`).value;
             
-            fetch('/update_enrichment', {
+            console.log('Updating job status:', {jobId, proposalStatus, submittedBy});
+            
+            fetch('/update_job_status', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     job_id: jobId,
                     proposal_status: proposalStatus,
-                    submitted_by: submittedBy,
-                    client_name: '',
-                    client_company: '',
-                    client_city: '',
-                    client_country: '',
-                    linkedin_url: '',
-                    email: '',
-                    phone: '',
-                    whatsapp: '',
-                    decision_maker: ''
+                    submitted_by: submittedBy
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    console.log('Status updated successfully:', data);
                     alert('Job status updated successfully!');
                 } else {
-                    alert('Failed to update job status');
+                    console.error('Failed to update:', data);
+                    alert('Failed to update job status: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
+                console.error('Error updating job status:', error);
                 alert('Error updating job status: ' + error);
             });
         }

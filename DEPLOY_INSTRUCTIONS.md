@@ -2,21 +2,48 @@
 
 ## What Was Wrong
 
-You had **TWO issues**:
+You had **THREE issues**:
 
 1. ✅ **Database columns existed** (you already fixed this)
-2. ❌ **Template was reading wrong column positions** - This was the real problem!
+2. ✅ **Template was reading wrong column positions** - Fixed!
+3. ✅ **JavaScript was overwriting data with empty strings** - Fixed!
 
 The template was looking at `job[22]` and `job[23]` for the status values, but those columns are actually `site` and `rss_source_id`. The actual status columns are at positions 24, 25, and 26 because they were added via ALTER TABLE (which adds columns at the end).
 
 ## What Was Fixed
 
+### Issue 2: Wrong Column Indices
+The template was looking at the wrong positions for status data.
+
+### Issue 3: Data Overwriting Problem (THE REAL CULPRIT!)
+The JavaScript was sending **empty strings** for all enrichment fields when updating status, which overwrote existing data!
+
+**Example of the problem:**
+```javascript
+// OLD CODE - WRONG! ❌
+body: JSON.stringify({
+    job_id: jobId,
+    proposal_status: 'Submitted',
+    submitted_by: 'Ashish',
+    client_name: '',        // ← Overwrites existing name!
+    client_company: '',     // ← Overwrites existing company!
+    linkedin_url: '',       // ← Overwrites existing LinkedIn!
+    // ... etc
+})
+```
+
 ### Fixed Files:
+
 1. **MindWork/templates/rss_jobs.html**
    - Changed `job[22]` → `job[25]` (proposal_status)
    - Changed `job[23]` → `job[26]` (submitted_by)
+   - Updated `updateJobStatus()` to call new `/update_job_status` endpoint
+   - Now only sends the fields that need updating
 
 2. **MindWork/app.py**
+   - Added `/update_job_status` endpoint - updates ONLY status fields
+   - Modified `/update_enrichment` to use dynamic SQL - only updates fields that are provided
+   - Added debug logging to track what's being updated
    - Added `/debug-columns` endpoint to help diagnose column issues
 
 ### Column Index Reference:

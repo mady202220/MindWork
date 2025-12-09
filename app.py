@@ -2034,6 +2034,57 @@ def check_db_type():
         'using_postgres': bool(os.getenv('DATABASE_URL'))
     })
 
+@app.route('/test-job-data/<job_id>')
+def test_job_data(job_id):
+    """Test endpoint to see actual job data"""
+    conn = system.get_db_connection()
+    c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    if is_postgres:
+        c.execute("SELECT * FROM jobs WHERE id = %s", (job_id,))
+    else:
+        c.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    
+    job = c.fetchone()
+    
+    if not job:
+        conn.close()
+        return jsonify({'error': 'Job not found'})
+    
+    # Get column names
+    if is_postgres:
+        c.execute("""
+            SELECT column_name, ordinal_position 
+            FROM information_schema.columns 
+            WHERE table_name = 'jobs' 
+            ORDER BY ordinal_position
+        """)
+        columns = [col[0] for col in c.fetchall()]
+    else:
+        c.execute("PRAGMA table_info(jobs)")
+        columns = [col[1] for col in c.fetchall()]
+    
+    conn.close()
+    
+    # Create a dict of column:value
+    job_dict = {}
+    for i, col_name in enumerate(columns):
+        if i < len(job):
+            job_dict[f"{i}_{col_name}"] = job[i]
+    
+    return jsonify({
+        'job_id': job_id,
+        'total_columns': len(columns),
+        'job_data_length': len(job),
+        'data': job_dict,
+        'status_fields': {
+            'proposal_status': job[25] if len(job) > 25 else 'INDEX OUT OF RANGE',
+            'submitted_by': job[26] if len(job) > 26 else 'INDEX OUT OF RANGE',
+            'outreach_status': job[24] if len(job) > 24 else 'INDEX OUT OF RANGE'
+        }
+    })
+
 @app.route('/debug-columns')
 def debug_columns():
     conn = system.get_db_connection()

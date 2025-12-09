@@ -144,7 +144,12 @@ class MultiRSSProposalSystem:
             'skills TEXT',
             'categories TEXT',
             'hourly_rate TEXT',
-            'site TEXT'
+            'site TEXT',
+            'outreach_status TEXT DEFAULT \'Pending\'',
+            'proposal_status TEXT DEFAULT \'Not Submitted\'',
+            'submitted_by TEXT',
+            'enriched_at TEXT',
+            'enriched_by TEXT'
         ]
         
         # Commit table creation before checking counts
@@ -1926,6 +1931,47 @@ def check_db_type():
 
 @app.route('/add-status-columns', methods=['POST'])
 def add_status_columns():
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        columns_to_add = [
+            ('outreach_status', 'TEXT DEFAULT \'Pending\''),
+            ('proposal_status', 'TEXT DEFAULT \'Not Submitted\''),
+            ('submitted_by', 'TEXT'),
+            ('enriched_at', 'TEXT'),
+            ('enriched_by', 'TEXT')
+        ]
+        
+        added_columns = []
+        existing_columns = []
+        
+        for col_name, col_type in columns_to_add:
+            try:
+                if is_postgres:
+                    c.execute(f'ALTER TABLE jobs ADD COLUMN {col_name} {col_type}')
+                else:
+                    c.execute(f'ALTER TABLE jobs ADD COLUMN {col_name} {col_type}')
+                conn.commit()
+                added_columns.append(col_name)
+            except Exception as e:
+                conn.rollback()
+                existing_columns.append(col_name)
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'added': added_columns,
+            'existing': existing_columns,
+            'message': f'Added {len(added_columns)} columns, {len(existing_columns)} already existed'
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/fix-missing-columns', methods=['GET', 'POST'])
+def fix_missing_columns():
     try:
         conn = system.get_db_connection()
         c = conn.cursor()

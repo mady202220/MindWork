@@ -39,6 +39,21 @@
     </div>
 
     <div class="container">
+        <!-- Database Maintenance -->
+        <div class="admin-section">
+            <h2 class="section-title">
+                <span>🔧</span>
+                <span>Database Maintenance</span>
+            </h2>
+            <div style="background: var(--warning-orange-light); padding: var(--space-4); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                <p style="margin-bottom: var(--space-3); color: var(--gray-700);">
+                    If you're experiencing errors with status updates, click the button below to add missing database columns.
+                </p>
+                <button class="btn btn-warning" onclick="fixMissingColumns()">🔧 Fix Missing Columns</button>
+                <div id="fix-result" style="margin-top: var(--space-3); display: none;"></div>
+            </div>
+        </div>
+        
         <!-- Add New RSS Feed -->
         <div class="admin-section">
             <h2 class="section-title">
@@ -142,6 +157,34 @@ Use Unicode formatting, no markdown. Be conversational but professional.</textar
     </div>
 
     <script>
+        function fixMissingColumns() {
+            const resultDiv = document.getElementById('fix-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="color: var(--primary-blue);">🔄 Checking and adding missing columns...</div>';
+            
+            fetch('/add-status-columns', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div style="color: var(--success-green); padding: var(--space-3); background: var(--success-green-light); border-radius: var(--radius-sm);">
+                            ✅ ${data.message}<br>
+                            <small>Added: ${data.added.join(', ') || 'none'}</small><br>
+                            <small>Already existed: ${data.existing.join(', ') || 'none'}</small>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div style="color: var(--danger-red);">❌ Error: ${data.error}</div>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div style="color: var(--danger-red);">❌ Error: ${error}</div>`;
+            });
+        }
+        
         function addRSSFeed() {
             const name = document.getElementById('new-feed-name').value;
             const url = document.getElementById('new-feed-url').value;

@@ -124,6 +124,7 @@
             <!-- Main Actions -->
             <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; align-items: center;">
                 <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
+                <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                 
                 <!-- Job Status Dropdowns -->
                 <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[25] if job|length > 25 else 'Not Submitted' }}">
@@ -156,7 +157,6 @@
             <!-- Collapsible Actions -->
             <div id="actions-{{ job[0] }}" style="display: none; margin-top: 12px; padding: 16px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--primary-blue);">
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                    <a href="{{ job[3] }}" target="_blank" class="btn btn-primary btn-sm">View Job</a>
                     <button class="btn btn-danger btn-sm" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                 </div>
             </div>

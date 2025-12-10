@@ -183,6 +183,7 @@
 
     <div class="nav-tabs">
         <a href="/" class="nav-tab">Dashboard</a>
+        <a href="/kanban" class="nav-tab">📋 Kanban</a>
         <a href="/enriched-jobs" class="nav-tab active">✅ Enriched Jobs</a>
         <a href="/team-management" class="nav-tab">👥 Team</a>
         <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
@@ -220,6 +221,7 @@
                     <select id="statusFilter" class="contact-input" onchange="applyFilters()">
                         <option value="">All Statuses</option>
                         <option value="Not Submitted">Not Submitted</option>
+                        <option value="Waiting for Submission">Waiting for Submission</option>
                         <option value="Saved">Saved</option>
                         <option value="Submitted">Submitted</option>
                         <option value="Proposal Viewed">Proposal Viewed</option>
@@ -351,6 +353,7 @@
                             <label class="contact-label">📋 Proposal Status</label>
                             <select id="proposal-status-{{ job[0] }}" class="contact-input">
                                 <option value="Not Submitted" {% if not job[25] or job[25] == 'Not Submitted' %}selected{% endif %}>Not Submitted</option>
+                                <option value="Waiting for Submission" {% if job[25] == 'Waiting for Submission' %}selected{% endif %}>Waiting for Submission</option>
                                 <option value="Saved" {% if job[25] == 'Saved' %}selected{% endif %}>Saved</option>
                                 <option value="Submitted" {% if job[25] == 'Submitted' %}selected{% endif %}>Submitted</option>
                                 <option value="Proposal Viewed" {% if job[25] == 'Proposal Viewed' %}selected{% endif %}>Proposal Viewed</option>

@@ -47,6 +47,7 @@
             {% if feed[3] == 0 %}<span style="opacity: 0.5;"> (Paused)</span>{% endif %}
         </a>
         {% endfor %}
+        <a href="/kanban" class="nav-tab">📋 Kanban</a>
         <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
         <a href="/team-management" class="nav-tab">👥 Team</a>
         <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
@@ -75,6 +76,7 @@
                 <select id="statusFilter" onchange="filterJobs()" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px;">
                     <option value="">All Statuses</option>
                     <option value="Not Submitted">Not Submitted</option>
+                    <option value="Waiting for Submission">Waiting for Submission</option>
                     <option value="Saved">Saved</option>
                     <option value="Submitted">Submitted</option>
                     <option value="Proposal Viewed">Proposal Viewed</option>
@@ -129,6 +131,7 @@
                 <!-- Job Status Dropdowns -->
                 <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[25] if job|length > 25 else 'Not Submitted' }}">
                     <option value="Not Submitted">Not Submitted</option>
+                    <option value="Waiting for Submission">Waiting for Submission</option>
                     <option value="Saved">Saved</option>
                     <option value="Submitted">Submitted</option>
                     <option value="Proposal Viewed">Proposal Viewed</option>

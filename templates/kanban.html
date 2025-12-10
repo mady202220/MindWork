@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kanban Board - MindWork</title>
+    <link rel="stylesheet" href="/static/css/brand.css">
+    <style>
+        .kanban-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px;
+            min-height: 80vh;
+        }
+        
+        .kanban-column {
+            min-width: 300px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 16px;
+            border: 2px solid var(--gray-200);
+        }
+        
+        .column-header {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--gray-300);
+        }
+        
+        .job-card {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--gray-200);
+            cursor: move;
+            transition: all 0.2s ease;
+        }
+        
+        .job-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .job-card.dragging {
+            opacity: 0.5;
+        }
+        
+        .job-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--gray-900);
+        }
+        
+        .job-meta {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-bottom: 8px;
+        }
+        
+        .job-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .btn-xs {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+        
+        .column-count {
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+        
+        .drop-zone {
+            min-height: 200px;
+            border: 2px dashed transparent;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .drop-zone.drag-over {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Kanban Board</h1>
+        <p>Manage jobs across all RSS feeds</p>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab">Dashboard</a>
+        <a href="/kanban" class="nav-tab active">📋 Kanban</a>
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
+        <a href="/team-management" class="nav-tab">👥 Team</a>
+        <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
+        <a href="/logout" class="nav-tab" style="margin-left: auto; background: #e74c3c; color: white;">🚪 Logout</a>
+    </div>
+
+    <div class="kanban-container">
+        <!-- Not Submitted Column -->
+        <div class="kanban-column" data-status="Not Submitted">
+            <div class="column-header">
+                📝 Not Submitted
+                <span class="column-count" id="count-not-submitted">0</span>
+            </div>
+            <div class="drop-zone" id="zone-not-submitted"></div>
+        </div>
+
+        <!-- Waiting for Submission Column -->
+        <div class="kanban-column" data-status="Waiting for Submission">
+            <div class="column-header">
+                ⏳ Waiting for Submission
+                <span class="column-count" id="count-waiting">0</span>
+            </div>
+            <div class="drop-zone" id="zone-waiting"></div>
+        </div>
+
+        <!-- Submitted Column -->
+        <div class="kanban-column" data-status="Submitted">
+            <div class="column-header">
+                📤 Submitted
+                <span class="column-count" id="count-submitted">0</span>
+            </div>
+            <div class="drop-zone" id="zone-submitted"></div>
+        </div>
+
+        <!-- Enriched Column -->
+        <div class="kanban-column" data-status="Enriched">
+            <div class="column-header">
+                🔍 Enriched
+                <span class="column-count" id="count-enriched">0</span>
+            </div>
+            <div class="drop-zone" id="zone-enriched"></div>
+        </div>
+
+        <!-- Outreach Pending Column -->
+        <div class="kanban-column" data-status="Outreach Pending">
+            <div class="column-header">
+                📞 Outreach Pending
+                <span class="column-count" id="count-outreach-pending">0</span>
+            </div>
+            <div class="drop-zone" id="zone-outreach-pending"></div>
+        </div>
+
+        <!-- Outreach Sent Column -->
+        <div class="kanban-column" data-status="Outreach Sent">
+            <div class="column-header">
+                ✅ Outreach Sent
+                <span class="column-count" id="count-outreach-sent">0</span>
+            </div>
+            <div class="drop-zone" id="zone-outreach-sent"></div>
+        </div>
+    </div>
+
+    <script>
+        const jobs = {{ jobs | tojson }};
+        let draggedJob = null;
+
+        function createJobCard(job) {
+            const proposalStatus = job[25] || 'Not Submitted';
+            const submittedBy = job[26] || '';
+            const enriched = job[17] === 1;
+            const outreachStatus = job[24] || 'Pending';
+
+            return `
+                <div class="job-card" draggable="true" data-job-id="${job[0]}" data-proposal-status="${proposalStatus}" data-enriched="${enriched}" data-outreach-status="${outreachStatus}">
+                    <div class="job-title">${job[1].substring(0, 60)}${job[1].length > 60 ? '...' : ''}</div>
+                    <div class="job-meta">
+                        <div>💰 ${job[5]}</div>
+                        <div>📅 ${job[6].substring(0, 10)}</div>
+                        ${submittedBy ? `<div>👤 ${submittedBy}</div>` : ''}
+                    </div>
+                    <div class="job-actions">
+                        <a href="${job[3]}" target="_blank" class="btn btn-primary btn-xs">View</a>
+                        <button class="btn btn-success btn-xs" onclick="generateProposal('${job[0]}')">Proposal</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function shouldShowInColumn(job, columnStatus) {
+            const proposalStatus = job[25] || 'Not Submitted';
+            const enriched = job[17] === 1;
+            const outreachStatus = job[24] || 'Pending';
+
+            switch(columnStatus) {
+                case 'Not Submitted':
+                    return proposalStatus === 'Not Submitted';
+                case 'Waiting for Submission':
+                    return proposalStatus === 'Waiting for Submission';
+                case 'Submitted':
+                    return ['Submitted', 'Saved', 'Proposal Viewed', 'Message Received', 'Absconding', 'Lost', 'Won'].includes(proposalStatus);
+                case 'Enriched':
+                    return enriched;
+                case 'Outreach Pending':
+                    return enriched && outreachStatus === 'Pending';
+                case 'Outreach Sent':
+                    return outreachStatus === 'Sent';
+                default:
+                    return false;
+            }
+        }
+
+        function populateColumns() {
+            const columns = {
+                'Not Submitted': document.getElementById('zone-not-submitted'),
+                'Waiting for Submission': document.getElementById('zone-waiting'),
+                'Submitted': document.getElementById('zone-submitted'),
+                'Enriched': document.getElementById('zone-enriched'),
+                'Outreach Pending': document.getElementById('zone-outreach-pending'),
+                'Outreach Sent': document.getElementById('zone-outreach-sent')
+            };
+
+            // Clear columns
+            Object.values(columns).forEach(col => col.innerHTML = '');
+
+            // Populate columns
+            jobs.forEach(job => {
+                Object.keys(columns).forEach(columnStatus => {
+                    if (shouldShowInColumn(job, columnStatus)) {
+                        columns[columnStatus].innerHTML += createJobCard(job);
+                    }
+                });
+            });
+
+            // Update counts
+            Object.keys(columns).forEach(columnStatus => {
+                const count = columns[columnStatus].children.length;
+                const countId = columnStatus.toLowerCase().replace(' ', '-');
+                document.getElementById(`count-${countId}`).textContent = count;
+            });
+
+            // Add drag listeners
+            addDragListeners();
+        }
+
+        function addDragListeners() {
+            document.querySelectorAll('.job-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragenter', handleDragEnter);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedJob = {
+                id: e.target.dataset.jobId,
+                element: e.target
+            };
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedJob = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragEnter(e) {
+            e.target.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.target.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('drag-over');
+
+            if (!draggedJob) return;
+
+            const column = e.target.closest('.kanban-column');
+            const newStatus = column.dataset.status;
+            
+            updateJobStatus(draggedJob.id, newStatus);
+        }
+
+        function updateJobStatus(jobId, newStatus) {
+            let updateData = { job_id: jobId };
+
+            // Map column status to actual job fields
+            switch(newStatus) {
+                case 'Not Submitted':
+                case 'Waiting for Submission':
+                case 'Submitted':
+                    updateData.proposal_status = newStatus;
+                    break;
+                case 'Outreach Sent':
+                    updateData.outreach_status = 'Sent';
+                    break;
+                case 'Outreach Pending':
+                    updateData.outreach_status = 'Pending';
+                    break;
+            }
+
+            fetch('/update_job_status', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(updateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update job data and refresh columns
+                    const job = jobs.find(j => j[0] === jobId);
+                    if (job && updateData.proposal_status) {
+                        job[25] = updateData.proposal_status;
+                    }
+                    if (job && updateData.outreach_status) {
+                        job[24] = updateData.outreach_status;
+                    }
+                    populateColumns();
+                } else {
+                    alert('Failed to update job status');
+                }
+            })
+            .catch(error => {
+                alert('Error updating job status: ' + error);
+            });
+        }
+
+        function generateProposal(jobId) {
+            window.open(`/rss/1?job=${jobId}`, '_blank');
+        }
+
+        // Initialize
+        populateColumns();
+    </script>
+</body>
+</html>

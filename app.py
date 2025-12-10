@@ -765,6 +765,26 @@ def enriched_jobs():
     conn.close()
     return render_template('enriched_jobs.html', jobs=jobs)
 
+@app.route('/kanban')
+@login_required
+def kanban():
+    conn = system.get_db_connection()
+    c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    if is_postgres:
+        c.execute("""SELECT id, title, description, url, client, budget, posted_date, processed,
+                     client_type, client_name, client_company, client_city, client_country, 
+                     linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
+                     categories, hourly_rate, site, rss_source_id, outreach_status, 
+                     proposal_status, submitted_by, enriched_at, enriched_by
+                     FROM jobs ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
+    else:
+        c.execute("SELECT * FROM jobs ORDER BY datetime(posted_date) DESC")
+    jobs = c.fetchall()
+    conn.close()
+    return render_template('kanban.html', jobs=jobs)
+
 @app.route('/api/job-matcher', methods=['POST'])
 def job_matcher():
     data = request.json

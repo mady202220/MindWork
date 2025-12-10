@@ -50,7 +50,10 @@
 </head>
 <body>
     <div class="trello-header">
-        <h1>📋 {{ current_feed[1] }} Jobs</h1>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="/" class="trello-btn trello-btn-secondary" style="padding: 8px 12px; text-decoration: none;">← Dashboard</a>
+            <h1 style="margin: 0;">📋 {{ current_feed[1] }} Jobs</h1>
+        </div>
         <div style="font-size: 12px; opacity: 0.9;">{{ current_feed[2] }}</div>
     </div>
 
@@ -65,10 +68,10 @@
                    href="/rss/2">Manual Jobs</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('enriched_jobs') }}">Enriched</a>
+                <a class="nav-link" href="/enriched-jobs">Enriched</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('kanban') }}">Kanban</a>
+                <a class="nav-link" href="/kanban">Kanban</a>
             </li>
         </ul>
     </div>

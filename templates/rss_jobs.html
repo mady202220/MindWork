@@ -4,47 +4,58 @@
     <title>{{ current_feed[1] }} - Jobs</title>
     <link rel="stylesheet" href="/static/css/brand.css">
     <style>
-        .job-card { background: white; padding: 24px; margin: 16px 0; border-radius: 12px; box-shadow: var(--shadow-md); border: 1px solid var(--border-light); }
-        .job-title { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
-        .job-meta { color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
-        .job-meta div { margin: 6px 0; }
-        .job-description { margin: 16px 0; line-height: 1.6; color: var(--text-primary); }
-        .enrichment-section { background: var(--warning-light); padding: 20px; margin: 16px 0; border-radius: 8px; border-left: 4px solid var(--warning); }
-        .enrichment-results { background: var(--success-light); padding: 16px; margin: 12px 0; border-radius: 8px; }
-        .proposal-section { background: var(--bg-secondary); padding: 24px; margin-top: 20px; border-radius: 12px; }
-        .examples { background: white; padding: 20px; margin: 12px 0; border-left: 4px solid var(--primary); border-radius: 8px; }
-        .debug-section { background: var(--bg-tertiary); padding: 16px; margin: 12px 0; border-radius: 8px; border-left: 4px solid var(--text-tertiary); }
-        .edit-fields { display: none; background: var(--bg-tertiary); padding: 16px; margin: 12px 0; border-radius: 8px; }
-        .enrichment-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-        .enrichment-form .form-group { margin: 0; }
-        .enrichment-form .form-group.full-width { grid-column: 1 / -1; }
-        .enrichment-form input, .enrichment-form select { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        .enrichment-form input:focus, .enrichment-form select:focus { outline: none; border-color: var(--primary-blue); }
-        .enrichment-form label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--gray-900); }
-        .stats { display: flex; gap: 20px; margin-bottom: 24px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; flex: 1; box-shadow: var(--shadow-sm); }
-        .stat-card h3 { color: var(--primary); font-size: 28px; margin: 0 0 8px 0; }
-        .stat-card p { color: var(--text-secondary); margin: 0; font-size: 14px; }
-        .search-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
-        .search-input { width: 100%; padding: 12px 16px; border: 2px solid var(--border-light); border-radius: 8px; font-size: 16px; transition: border-color 0.2s; }
-        .search-input:focus { outline: none; border-color: var(--primary); }
-        .no-jobs { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: var(--shadow-sm); }
-        .no-jobs h3 { color: var(--text-primary); margin-bottom: 12px; }
-        .no-jobs p { color: var(--text-secondary); }
+        body { background: #f4f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; }
+        .trello-header { background: #0079bf; color: white; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .trello-header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+        .trello-nav { background: white; border-bottom: 1px solid #ddd; padding: 0; }
+        .trello-nav .nav-tabs { border: none; margin: 0; }
+        .trello-nav .nav-link { border: none; color: #5e6c84; padding: 12px 16px; font-weight: 500; }
+        .trello-nav .nav-link.active { background: #0079bf; color: white; }
+        .trello-nav .nav-link:hover { background: #f4f5f7; }
+        .trello-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .trello-stats { display: flex; gap: 12px; margin-bottom: 20px; }
+        .trello-stat { background: white; padding: 16px; border-radius: 3px; box-shadow: 0 1px 0 rgba(9,30,66,.25); flex: 1; text-align: center; }
+        .trello-stat h3 { color: #0079bf; font-size: 24px; margin: 0 0 4px 0; font-weight: 600; }
+        .trello-stat p { color: #5e6c84; margin: 0; font-size: 12px; }
+        .trello-search { background: white; padding: 16px; border-radius: 3px; box-shadow: 0 1px 0 rgba(9,30,66,.25); margin-bottom: 20px; }
+        .trello-search input { width: 100%; padding: 8px 12px; border: 2px solid #ddd; border-radius: 3px; font-size: 14px; }
+        .trello-search input:focus { outline: none; border-color: #0079bf; }
+        .trello-filters { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+        .trello-filters select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+        .trello-card { background: white; border-radius: 3px; box-shadow: 0 1px 0 rgba(9,30,66,.25); margin-bottom: 12px; padding: 0; overflow: hidden; }
+        .trello-card:hover { box-shadow: 0 2px 4px rgba(9,30,66,.15); }
+        .trello-card-header { padding: 12px 16px; border-bottom: 1px solid #f4f5f7; }
+        .trello-card-title { font-size: 14px; font-weight: 600; color: #172b4d; margin: 0 0 8px 0; line-height: 1.3; }
+        .trello-card-meta { display: flex; gap: 16px; font-size: 12px; color: #5e6c84; flex-wrap: wrap; }
+        .trello-card-body { padding: 12px 16px; }
+        .trello-card-description { font-size: 13px; color: #5e6c84; line-height: 1.4; margin-bottom: 12px; }
+        .trello-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .trello-btn { padding: 6px 12px; border: none; border-radius: 3px; font-size: 12px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-block; }
+        .trello-btn-primary { background: #0079bf; color: white; }
+        .trello-btn-primary:hover { background: #005a8b; }
+        .trello-btn-secondary { background: #f4f5f7; color: #5e6c84; }
+        .trello-btn-secondary:hover { background: #e4e6ea; }
+        .trello-btn-success { background: #61bd4f; color: white; }
+        .trello-btn-success:hover { background: #4d9a3a; }
+        .trello-btn-danger { background: #eb5a46; color: white; }
+        .trello-btn-danger:hover { background: #c9372c; }
+        .trello-status-dropdowns { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+        .trello-status-dropdowns select { padding: 4px 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 11px; }
+        .trello-collapsible { display: none; padding: 12px 16px; background: #f8f9fa; border-top: 1px solid #f4f5f7; }
+        .trello-toggle { color: #0079bf; cursor: pointer; font-size: 12px; }
+        .trello-toggle:hover { text-decoration: underline; }
+        .enrichment-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .enrichment-form input, .enrichment-form select { padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ current_feed[1] }} Jobs</h1>
-        <p>{{ current_feed[2] }}</p>
+    <div class="trello-header">
+        <h1>📋 {{ current_feed[1] }} Jobs</h1>
+        <div style="font-size: 12px; opacity: 0.9;">{{ current_feed[2] }}</div>
     </div>
 
-    <div class="container-fluid">
-
-        <h1>RSS Job Feeds</h1>
-
-        <!-- Navigation Tabs -->
-        <ul class="nav nav-tabs mb-3">
+    <div class="trello-nav">
+        <ul class="nav nav-tabs">
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if current_feed[0] == 'vollna' else '' }}" 
                    href="{{ url_for('rss_jobs') }}?feed=vollna">Vollna</a>
@@ -64,8 +75,9 @@
                 <a class="nav-link" href="{{ url_for('kanban') }}">Kanban</a>
             </li>
         </ul>
+    </div>
 
-        <div class="container">
+    <div class="trello-container">
         <div class="stats">
             <div class="stat-card">
                 <h3>{{ jobs|length }}</h3>
@@ -116,56 +128,48 @@
         {% endif %}
 
         {% for job in jobs %}
-        <div class="job-card" id="job-{{ job[0] }}">
-            <div class="job-title">{{ job[1] }}</div>
-            <div class="job-meta">
-                <div><strong>Client:</strong> {{ job[4] }} | <strong>Posted:</strong> {{ job[6][:10] }}</div>
-                <div><strong>Budget:</strong> {{ job[5] }}</div>
-                {% if job|length > 17 %}
-                    <div><strong>Hourly Rate:</strong> {{ job[21] or 'Not specified' }}</div>
-                    <div><strong>Skills:</strong> {{ job[19] or 'Not specified' }}</div>
-                    <div><strong>Categories:</strong> {{ job[20] or 'Not specified' }}</div>
-                {% endif %}
-                <div style="margin-top: 10px;">
-                    {% if job[7] == 1 %}<span style="color: green; margin-right: 10px;">✓ Processed</span>{% endif %}
-                    {% if job[17] == 1 %}<span style="color: blue; margin-right: 10px;">🔍 Enriched</span>{% endif %}
-                    {% if job|length > 25 and job[25] %}<span style="color: purple; margin-right: 10px;">📊 Status: {{ job[25] }}</span>{% endif %}
-                    {% if job|length > 26 and job[26] %}<span style="color: orange;">👤 By: {{ job[26] }}</span>{% endif %}
+        <div class="trello-card" id="job-{{ job[0] }}">
+            <div class="trello-card-header">
+                <div class="trello-card-title">{{ job[1] }}</div>
+                <div class="trello-card-meta">
+                    <span>👤 {{ job[4] }}</span>
+                    <span>📅 {{ job[6][:10] }}</span>
+                    <span>💰 {{ job[5] }}</span>
+                    {% if job[7] == 1 %}<span style="color: #61bd4f;">✓ Processed</span>{% endif %}
+                    {% if job[17] == 1 %}<span style="color: #0079bf;">🔍 Enriched</span>{% endif %}
+                    {% if job|length > 25 and job[25] %}<span style="color: #eb5a46;">{{ job[25] }}</span>{% endif %}
+                    {% if job|length > 26 and job[26] %}<span style="color: #f2d600;">{{ job[26] }}</span>{% endif %}
                 </div>
             </div>
-            <div class="job-description">{{ job[2][:200] }}...</div>
+            <div class="trello-card-body">
+                <div class="trello-card-description">{{ job[2][:200] }}...</div>
             
-            <!-- Main Actions -->
-            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; align-items: center;">
-                <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
-                <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
+                <div class="trello-actions">
+                    <button class="trello-btn trello-btn-success" onclick="generateProposal('{{ job[0] }}', {{ current_feed[0] }})">Generate Proposal</button>
+                    <a href="{{ job[3] }}" target="_blank" class="trello-btn trello-btn-primary">View Job</a>
+                    <button class="trello-btn trello-btn-secondary" onclick="toggleActions('{{ job[0] }}')">Actions</button>
+                </div>
                 
-                <!-- Job Status Dropdowns -->
-                <select id="job-proposal-status-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[25] if job|length > 25 else 'Not Submitted' }}">
-                    <option value="Not Submitted">Not Submitted</option>
-                    <option value="Waiting for Submission">Waiting for Submission</option>
-                    <option value="Saved">Saved</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="Proposal Viewed">Proposal Viewed</option>
-                    <option value="Message Received">Message Received</option>
-                    <option value="Absconding">Absconding</option>
-                    <option value="Lost">Lost</option>
-                    <option value="Won">Won</option>
-                </select>
-                
-                <select id="job-submitted-by-{{ job[0] }}" style="padding: 8px; border: 2px solid var(--gray-200); border-radius: 6px; margin-right: 8px;" data-current="{{ job[26] if job|length > 26 else '' }}">
-                    <option value="">Not Selected</option>
-                    <option value="Ashish">Ashish</option>
-                    <option value="Madhuri">Madhuri</option>
-                </select>
-                
-                <button class="btn btn-primary btn-sm" onclick="updateJobStatus('{{ job[0] }}')">💾 Save</button>
-                
-                <!-- Action Menu -->
-                <div style="margin-left: auto;">
-                    <button class="btn btn-outline btn-sm" onclick="toggleActions('{{ job[0] }}')" style="padding: 6px 12px;">
-                        ⚙️ Actions ▼
-                    </button>
+                <div class="trello-status-dropdowns">
+                    <select id="job-proposal-status-{{ job[0] }}" data-current="{{ job[25] if job|length > 25 else 'Not Submitted' }}">
+                        <option value="Not Submitted">Not Submitted</option>
+                        <option value="Waiting for Submission">Waiting for Submission</option>
+                        <option value="Saved">Saved</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Proposal Viewed">Proposal Viewed</option>
+                        <option value="Message Received">Message Received</option>
+                        <option value="Absconding">Absconding</option>
+                        <option value="Lost">Lost</option>
+                        <option value="Won">Won</option>
+                    </select>
+                    
+                    <select id="job-submitted-by-{{ job[0] }}" data-current="{{ job[26] if job|length > 26 else '' }}">
+                        <option value="">Not Selected</option>
+                        <option value="Ashish">Ashish</option>
+                        <option value="Madhuri">Madhuri</option>
+                    </select>
+                    
+                    <button class="trello-btn trello-btn-primary" onclick="updateJobStatus('{{ job[0] }}')">Save</button>
                 </div>
             </div>
             
@@ -500,15 +504,12 @@
         
         function toggleActions(jobId) {
             const actionsDiv = document.getElementById(`actions-${jobId}`);
+            actionsDiv.style.display = actionsDiv.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function toggleEnrichment(jobId) {
             const enrichmentDiv = document.getElementById(`enrichment-toggle-${jobId}`);
-            
-            if (actionsDiv.style.display === 'none') {
-                actionsDiv.style.display = 'block';
-                enrichmentDiv.style.display = 'block';
-            } else {
-                actionsDiv.style.display = 'none';
-                enrichmentDiv.style.display = 'none';
-            }
+            enrichmentDiv.style.display = enrichmentDiv.style.display === 'none' ? 'block' : 'none';
         }
         
         function updateJobStatus(jobId) {

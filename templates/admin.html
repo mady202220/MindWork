@@ -4,7 +4,19 @@
     <title>Admin - RSS & Prompts Management</title>
     <link rel="stylesheet" href="/static/css/brand.css">
     <style>
-        .admin-section { background: white; padding: var(--space-6); margin: var(--space-6) 0; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; position: relative; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat; pointer-events: none; z-index: -1; }
+        .header { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); color: white; padding: 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .header p { opacity: 0.9; font-size: 1.1rem; font-weight: 400; }
+        .nav-tabs { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 0; margin: 0; display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; }
+        .nav-tab { padding: 15px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-right: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; font-weight: 500; position: relative; }
+        .nav-tab:hover { background: rgba(255, 255, 255, 0.1); color: white; transform: translateY(-2px); }
+        .nav-tab.active { background: rgba(255, 255, 255, 0.2); color: white; font-weight: 600; }
+        .admin-tab { margin-left: auto; background: rgba(231, 76, 60, 0.8); }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .admin-section { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 30px; margin: 20px 0; border-radius: 20px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
         .feed-card { background: var(--gray-50); padding: var(--space-6); margin: var(--space-4) 0; border-radius: var(--radius-lg); border-left: 4px solid var(--primary-blue); }
         .feed-name { font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2); color: var(--gray-900); }
         .feed-url { color: var(--gray-600); font-size: 0.875rem; margin-bottom: var(--space-4); word-break: break-all; }
@@ -34,10 +46,11 @@
         <a href="/" class="nav-tab">Dashboard</a>
         <a href="/rss/1" class="nav-tab">Web Development</a>
         <a href="/rss/2" class="nav-tab">Manual Jobs</a>
-        <a href="/enriched-jobs" class="nav-tab">Enriched</a>
-        <a href="/kanban" class="nav-tab">Kanban</a>
-        <a href="/team-management" class="nav-tab">Team</a>
-        <a href="/admin" class="nav-tab active">⚙️ Admin</a>
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
+        <a href="/kanban" class="nav-tab">📋 Kanban</a>
+        <a href="/team-management" class="nav-tab">👥 Team</a>
+        <a href="/admin" class="nav-tab admin-tab active">⚙️ Admin</a>
+        <a href="/logout" class="nav-tab" style="background: #e74c3c; margin-left: 10px;">🚪 Logout</a>
     </div>
 
     <div class="container">

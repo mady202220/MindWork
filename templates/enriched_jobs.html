@@ -181,30 +181,28 @@
         <p>Jobs with complete client contact information ready for outreach</p>
     </div>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>MindWork</h3>
-        </div>
-        <div class="sidebar-menu">
-            <div class="menu-item">
-                <div class="menu-header" onclick="toggleSubmenu('rss-submenu')">
-                    <span>📰 RSS Feeds</span>
-                    <span class="arrow" id="rss-arrow">▼</span>
-                </div>
-                <div class="submenu" id="rss-submenu">
-                    <a href="/rss/1" class="submenu-item">Web Development</a>
-                    <a href="/rss/2" class="submenu-item">Manual Jobs</a>
-                </div>
-            </div>
-            <a href="/enriched-jobs" class="menu-item active">✅ Enriched</a>
-            <a href="/kanban" class="menu-item">📋 Kanban</a>
-            <a href="/team-management" class="menu-item">👥 Team</a>
-            <a href="/admin" class="menu-item">⚙️ Admin</a>
-            <a href="/logout" class="menu-item logout">🚪 Logout</a>
-        </div>
-    </div>
-    
-    <div class="main-content">
+    <div class="container-fluid">
+
+        <h1>Enriched Jobs</h1>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('rss_jobs') }}?feed=vollna">Vollna</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('rss_jobs') }}?feed=upwork">Upwork</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('rss_jobs') }}?feed=freelancer">Freelancer</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="{{ url_for('enriched_jobs') }}">Enriched</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('kanban') }}">Kanban</a>
+            </li>
+        </ul>
 
         <div class="container">
         <div class="stats-grid">
@@ -405,35 +403,7 @@
         </div>
     </div>
 
-    <style>
-        body { margin: 0; display: flex; }
-        .sidebar { width: 250px; background: var(--gray-900); color: white; height: 100vh; position: fixed; }
-        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--gray-700); }
-        .sidebar-header h3 { margin: 0; color: white; }
-        .sidebar-menu { padding: 20px 0; }
-        .menu-item { display: block; padding: 12px 20px; color: white; text-decoration: none; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
-        .menu-item:hover { background: var(--gray-700); }
-        .menu-item.active { background: var(--primary); }
-        .menu-item.logout { background: #e74c3c; margin-top: 20px; }
-        .menu-header { display: flex; justify-content: space-between; align-items: center; }
-        .submenu { display: none; padding-left: 20px; }
-        .submenu.open { display: block; }
-        .submenu-item { display: block; padding: 8px 0; color: var(--gray-300); text-decoration: none; }
-        .submenu-item:hover { color: white; }
-        .submenu-item.active { color: var(--primary); font-weight: bold; }
-        .main-content { margin-left: 250px; width: calc(100% - 250px); }
-        .arrow { transition: transform 0.2s; }
-        .arrow.rotated { transform: rotate(180deg); }
-    </style>
 
-    <script>
-        function toggleSubmenu(id) {
-            const submenu = document.getElementById(id);
-            const arrow = document.getElementById(id.replace('-submenu', '-arrow'));
-            submenu.classList.toggle('open');
-            arrow.classList.toggle('rotated');
-        }
-    </script>
 
     <!-- WhatsApp Modal -->
     <div id="whatsappModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">

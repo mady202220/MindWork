@@ -541,14 +541,22 @@
                 const meta = card.querySelector('.job-meta').textContent.toLowerCase();
                 const description = card.querySelector('.job-description').textContent.toLowerCase();
                 
+                // Get actual dropdown values
+                const jobId = card.id.replace('job-', '');
+                const proposalStatusSelect = document.getElementById(`job-proposal-status-${jobId}`);
+                const submittedBySelect = document.getElementById(`job-submitted-by-${jobId}`);
+                
+                const currentProposalStatus = proposalStatusSelect ? proposalStatusSelect.value : '';
+                const currentSubmittedBy = submittedBySelect ? submittedBySelect.value : '';
+                
                 // Search filter
                 const matchesSearch = !searchTerm || title.includes(searchTerm) || meta.includes(searchTerm) || description.includes(searchTerm);
                 
                 // Status filter
-                const statusMatch = !statusFilter || meta.includes(`Status: ${statusFilter}`);
+                const statusMatch = !statusFilter || currentProposalStatus === statusFilter;
                 
                 // Submitter filter
-                const submitterMatch = !submitterFilter || meta.includes(`By: ${submitterFilter}`);
+                const submitterMatch = !submitterFilter || currentSubmittedBy === submitterFilter;
                 
                 if (matchesSearch && statusMatch && submitterMatch) {
                     card.style.display = 'block';

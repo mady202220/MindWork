@@ -39,21 +39,36 @@
         <p>{{ current_feed[2] }}</p>
     </div>
 
-    <div class="nav-tabs">
-        <a href="/" class="nav-tab">Dashboard</a>
-        {% for feed in feeds %}
-        <a href="/rss/{{ feed[0] }}" class="nav-tab {% if feed[0] == current_feed[0] %}active{% endif %}">
-            {{ feed[1] }}
-            {% if feed[3] == 0 %}<span style="opacity: 0.5;"> (Paused)</span>{% endif %}
-        </a>
-        {% endfor %}
-        <a href="/kanban" class="nav-tab">📋 Kanban</a>
-        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
-        <a href="/team-management" class="nav-tab">👥 Team</a>
-        <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>MindWork</h3>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item">
+                <div class="menu-header" onclick="toggleSubmenu('rss-submenu')">
+                    <span>📰 RSS Feeds</span>
+                    <span class="arrow" id="rss-arrow">▼</span>
+                </div>
+                <div class="submenu" id="rss-submenu">
+                    {% for feed in feeds %}
+                    <a href="/rss/{{ feed[0] }}" class="submenu-item {% if feed[0] == current_feed[0] %}active{% endif %}">
+                        {{ feed[1] }}
+                        {% if feed[3] == 0 %}<span style="opacity: 0.5;"> (Paused)</span>{% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <a href="/enriched-jobs" class="menu-item">✅ Enriched</a>
+            <a href="/kanban" class="menu-item">📋 Kanban</a>
+            <a href="/team-management" class="menu-item">👥 Team</a>
+            <a href="/admin" class="menu-item">⚙️ Admin</a>
+            <a href="/logout" class="menu-item logout">🚪 Logout</a>
+        </div>
     </div>
+    
+    <div class="main-content">
 
-    <div class="container">
+        <div class="container">
         <div class="stats">
             <div class="stat-card">
                 <h3>{{ jobs|length }}</h3>
@@ -247,7 +262,43 @@
             </div>
         </div>
         {% endfor %}
+        </div>
     </div>
+
+    <style>
+        body { margin: 0; display: flex; }
+        .sidebar { width: 250px; background: var(--gray-900); color: white; height: 100vh; position: fixed; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--gray-700); }
+        .sidebar-header h3 { margin: 0; color: white; }
+        .sidebar-menu { padding: 20px 0; }
+        .menu-item { display: block; padding: 12px 20px; color: white; text-decoration: none; border: none; background: none; width: 100%; text-align: left; cursor: pointer; }
+        .menu-item:hover { background: var(--gray-700); }
+        .menu-item.active { background: var(--primary); }
+        .menu-item.logout { background: #e74c3c; margin-top: 20px; }
+        .menu-header { display: flex; justify-content: space-between; align-items: center; }
+        .submenu { display: none; padding-left: 20px; }
+        .submenu.open { display: block; }
+        .submenu-item { display: block; padding: 8px 0; color: var(--gray-300); text-decoration: none; }
+        .submenu-item:hover { color: white; }
+        .submenu-item.active { color: var(--primary); font-weight: bold; }
+        .main-content { margin-left: 250px; width: calc(100% - 250px); }
+        .arrow { transition: transform 0.2s; }
+        .arrow.rotated { transform: rotate(180deg); }
+    </style>
+
+    <script>
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const arrow = document.getElementById(id.replace('-submenu', '-arrow'));
+            submenu.classList.toggle('open');
+            arrow.classList.toggle('rotated');
+        }
+        
+        // Auto-open RSS submenu if on RSS page
+        {% if current_feed %}
+        document.getElementById('rss-submenu').classList.add('open');
+        document.getElementById('rss-arrow').classList.add('rotated');
+        {% endif %}
 
     <script>
         function generateProposal(jobId, rssId) {

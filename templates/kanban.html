@@ -128,6 +128,15 @@
     <div class="container" style="max-width: 1200px; margin: 30px auto; padding: 0 20px;">
 
         <div class="kanban-container">
+        <!-- Saved Column -->
+        <div class="kanban-column" data-status="Saved">
+            <div class="column-header">
+                💾 Saved
+                <span class="column-count" id="count-saved">0</span>
+            </div>
+            <div class="drop-zone" id="zone-saved"></div>
+        </div>
+
         <!-- Waiting for Submission Column -->
         <div class="kanban-column" data-status="Waiting for Submission">
             <div class="column-header">
@@ -216,10 +225,12 @@
             const outreachStatus = job[24] || 'Pending';
 
             switch(columnStatus) {
+                case 'Saved':
+                    return proposalStatus === 'Saved';
                 case 'Waiting for Submission':
                     return proposalStatus === 'Waiting for Submission';
                 case 'Submitted':
-                    return ['Submitted', 'Saved', 'Proposal Viewed', 'Message Received', 'Absconding', 'Lost'].includes(proposalStatus);
+                    return ['Submitted', 'Proposal Viewed', 'Message Received', 'Absconding', 'Lost'].includes(proposalStatus);
                 case 'Enriched':
                     return enriched;
                 case 'Outreach Pending':
@@ -235,6 +246,7 @@
 
         function populateColumns() {
             const columns = {
+                'Saved': document.getElementById('zone-saved'),
                 'Waiting for Submission': document.getElementById('zone-waiting'),
                 'Submitted': document.getElementById('zone-submitted'),
                 'Enriched': document.getElementById('zone-enriched'),
@@ -258,7 +270,7 @@
             // Update counts
             Object.keys(columns).forEach(columnStatus => {
                 const count = columns[columnStatus].children.length;
-                const countId = columnStatus.toLowerCase().replace(' ', '-');
+                let countId = columnStatus.toLowerCase().replace(/ /g, '-');
                 document.getElementById(`count-${countId}`).textContent = count;
             });
 

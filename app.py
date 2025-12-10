@@ -299,11 +299,23 @@ class MultiRSSProposalSystem:
                 else:
                     c.execute("SELECT id FROM jobs WHERE id = ?", (job_id,))
                 if not c.fetchone():
-                    # Extract data from RSS
+                    # Extract budget/price from title
+                    budget = 'Not specified'
                     hourly_rate = 'Not specified'
+                    
                     if 'Hourly Rate:' in entry.title:
                         rate_part = entry.title.split('Hourly Rate:')[1].strip().rstrip(')')
                         hourly_rate = rate_part
+                        budget = f"Hourly: {rate_part}"
+                    elif 'Fixed Price:' in entry.title:
+                        price_part = entry.title.split('Fixed Price:')[1].strip().rstrip(')')
+                        budget = f"Fixed: {price_part}"
+                    
+                    # Use actual published date from RSS
+                    posted_date = entry.get('published', datetime.now().isoformat())
+                    if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                        from time import mktime
+                        posted_date = datetime.fromtimestamp(mktime(entry.published_parsed)).isoformat()
                     
                     # Extract skills from description
                     skills = 'Not specified'
@@ -334,8 +346,8 @@ class MultiRSSProposalSystem:
                                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                                  (job_id, entry.title, description, entry.link,
                                   entry.get('author', 'Unknown'), 
-                                  entry.get('budget', 'Not specified'),
-                                  entry.get('published', datetime.now().isoformat()),
+                                  budget,
+                                  posted_date,
                                   hourly_rate, skills, categories, rss_id))
                     else:
                         c.execute("""INSERT INTO jobs 
@@ -344,8 +356,8 @@ class MultiRSSProposalSystem:
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                                  (job_id, entry.title, description, entry.link,
                                   entry.get('author', 'Unknown'), 
-                                  entry.get('budget', 'Not specified'),
-                                  entry.get('published', datetime.now().isoformat()),
+                                  budget,
+                                  posted_date,
                                   hourly_rate, skills, categories, rss_id))
                     new_jobs += 1
             

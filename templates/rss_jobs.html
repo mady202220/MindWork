@@ -460,8 +460,8 @@
             let processedCount = 0;
             let enrichedCount = 0;
             
-            document.querySelectorAll('.job-card').forEach(card => {
-                const meta = card.querySelector('.job-meta');
+            document.querySelectorAll('.trello-card').forEach(card => {
+                const meta = card.querySelector('.trello-card-meta');
                 if (meta && meta.textContent.includes('✓ Processed')) {
                     processedCount++;
                 }
@@ -473,8 +473,11 @@
                 }
             });
             
-            document.getElementById('processed-count').textContent = processedCount;
-            document.getElementById('enriched-count').textContent = enrichedCount;
+            const processedEl = document.getElementById('processed-count');
+            const enrichedEl = document.getElementById('enriched-count');
+            
+            if (processedEl) processedEl.textContent = processedCount;
+            if (enrichedEl) enrichedEl.textContent = enrichedCount;
         }
         
         function deleteJob(jobId) {
@@ -566,12 +569,18 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const statusFilter = document.getElementById('statusFilter').value;
             const submitterFilter = document.getElementById('submitterFilter').value;
-            const jobCards = document.querySelectorAll('.job-card');
+            const jobCards = document.querySelectorAll('.trello-card');
             
             jobCards.forEach(card => {
-                const title = card.querySelector('.job-title').textContent.toLowerCase();
-                const meta = card.querySelector('.job-meta').textContent.toLowerCase();
-                const description = card.querySelector('.job-description').textContent.toLowerCase();
+                const title = card.querySelector('.trello-card-title');
+                const meta = card.querySelector('.trello-card-meta');
+                const description = card.querySelector('.trello-card-description');
+                
+                if (!title || !meta || !description) return;
+                
+                const titleText = title.textContent.toLowerCase();
+                const metaText = meta.textContent.toLowerCase();
+                const descText = description.textContent.toLowerCase();
                 
                 // Get actual dropdown values
                 const jobId = card.id.replace('job-', '');
@@ -582,7 +591,7 @@
                 const currentSubmittedBy = submittedBySelect ? submittedBySelect.value : '';
                 
                 // Search filter
-                const matchesSearch = !searchTerm || title.includes(searchTerm) || meta.includes(searchTerm) || description.includes(searchTerm);
+                const matchesSearch = !searchTerm || titleText.includes(searchTerm) || metaText.includes(searchTerm) || descText.includes(searchTerm);
                 
                 // Status filter
                 const statusMatch = !statusFilter || currentProposalStatus === statusFilter;

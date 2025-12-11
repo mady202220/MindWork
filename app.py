@@ -2073,6 +2073,100 @@ def analytics():
     conn.close()
     return render_template('analytics.html', enrichment_stats=enrichment_stats, proposal_stats=proposal_stats)
 
+@app.route('/check_whatsapp', methods=['POST'])
+def check_whatsapp():
+    """Check if a phone number has WhatsApp using a simple API approach"""
+    try:
+        data = request.json
+        phone = data.get('phone', '').strip()
+        
+        if not phone:
+            return jsonify({'success': False, 'error': 'Phone number is required'})
+        
+        # Clean phone number (remove spaces, dashes, etc.)
+        import re
+        clean_phone = re.sub(r'[^\d+]', '', phone)
+        
+        # For now, return a mock response since WhatsApp API requires business verification
+        # You can integrate with services like:
+        # - WhatsApp Business API (requires verification)
+        # - Third-party services like Twilio Lookup API
+        # - Or use web scraping methods (not recommended)
+        
+        # Mock logic: assume numbers with country codes have WhatsApp
+        has_whatsapp = len(clean_phone) >= 10 and (clean_phone.startswith('+') or len(clean_phone) >= 10)
+        
+        return jsonify({
+            'success': True,
+            'has_whatsapp': has_whatsapp,
+            'phone': clean_phone,
+            'note': 'Mock validation - integrate with WhatsApp Business API for real validation'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/validate_email', methods=['POST'])
+def validate_email():
+    """Validate email using NeverBounce API"""
+    try:
+        data = request.json
+        email = data.get('email', '').strip()
+        
+        if not email:
+            return jsonify({'success': False, 'error': 'Email is required'})
+        
+        # NeverBounce API integration
+        neverbounce_api_key = os.getenv('NEVERBOUNCE_API_KEY')
+        
+        if not neverbounce_api_key:
+            # Fallback to basic email validation
+            import re
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            is_valid = bool(re.match(email_pattern, email))
+            
+            return jsonify({
+                'success': True,
+                'is_valid': is_valid,
+                'result': 'valid' if is_valid else 'invalid',
+                'note': 'Basic validation - add NEVERBOUNCE_API_KEY for advanced validation'
+            })
+        
+        # NeverBounce API call
+        neverbounce_url = 'https://api.neverbounce.com/v4/single/check'
+        
+        response = requests.get(neverbounce_url, params={
+            'key': neverbounce_api_key,
+            'email': email
+        })
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            if result.get('status') == 'success':
+                email_result = result.get('result', 'unknown')
+                is_valid = email_result in ['valid', 'catchall']
+                
+                return jsonify({
+                    'success': True,
+                    'is_valid': is_valid,
+                    'result': email_result,
+                    'confidence': result.get('flags', {}).get('has_dns', False)
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': result.get('message', 'NeverBounce API error')
+                })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'NeverBounce API returned status {response.status_code}'
+            })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/check-db-type')
 def check_db_type():
     return jsonify({

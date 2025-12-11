@@ -47,8 +47,18 @@
         .trello-collapsible { display: none; padding: 12px 16px; background: #f8f9fa; border-top: 1px solid #f4f5f7; }
         .trello-toggle { color: #0079bf; cursor: pointer; font-size: 12px; }
         .trello-toggle:hover { text-decoration: underline; }
-        .enrichment-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .enrichment-form input, .enrichment-form select { padding: 8px; border: 1px solid #ddd; border-radius: 3px; font-size: 12px; }
+        .enrichment-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        .enrichment-form .form-group { margin: 0; }
+        .enrichment-form .form-group.full-width { grid-column: 1 / -1; }
+        .enrichment-form input, .enrichment-form select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .enrichment-form input:focus, .enrichment-form select:focus { outline: none; border-color: #0079bf; box-shadow: 0 0 0 3px rgba(0, 121, 191, 0.1); }
+        .enrichment-form label { display: block; margin-bottom: 6px; font-weight: 600; color: #172b4d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .enrichment-section { background: #f8f9fa; padding: 20px; margin: 16px 0; border-radius: 8px; border-left: 4px solid #0079bf; }
+        .validation-buttons { display: flex; gap: 8px; margin-top: 8px; }
+        .validation-result { font-size: 11px; margin-top: 4px; padding: 4px 8px; border-radius: 3px; }
+        .validation-valid { background: #d4edda; color: #155724; }
+        .validation-invalid { background: #f8d7da; color: #721c24; }
+        .validation-checking { background: #d1ecf1; color: #0c5460; }
     </style>
 </head>
 <body>
@@ -201,19 +211,38 @@
                 {% else %}
                     <div class="enrichment-form">
                         <div class="form-group">
-                            <input type="text" id="client-company-{{ job[0] }}" placeholder="Company Name">
+                            <label for="client-company-{{ job[0] }}">Company Name</label>
+                            <input type="text" id="client-company-{{ job[0] }}" placeholder="Enter company name">
                         </div>
                         <div class="form-group">
-                            <input type="text" id="client-name-{{ job[0] }}" placeholder="Person Name">
+                            <label for="client-name-{{ job[0] }}">Person Name</label>
+                            <input type="text" id="client-name-{{ job[0] }}" placeholder="Enter person name">
                         </div>
                         <div class="form-group">
-                            <input type="text" id="client-city-{{ job[0] }}" placeholder="City">
+                            <label for="client-city-{{ job[0] }}">City</label>
+                            <input type="text" id="client-city-{{ job[0] }}" placeholder="Enter city">
                         </div>
                         <div class="form-group">
-                            <input type="text" id="client-country-{{ job[0] }}" placeholder="Country">
+                            <label for="client-country-{{ job[0] }}">Country</label>
+                            <input type="text" id="client-country-{{ job[0] }}" placeholder="Enter country">
+                        </div>
+                        <div class="form-group">
+                            <label for="enriched-phone-{{ job[0] }}">Phone Number</label>
+                            <input type="text" id="enriched-phone-{{ job[0] }}" placeholder="Phone number with country code (e.g. 254722831145)" value="{{ job[15] or '' }}">
+                            <div class="validation-buttons">
+                                <button type="button" class="trello-btn trello-btn-success" onclick="openWhatsAppCheck('{{ job[0] }}')">Check WhatsApp</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="enriched-email-{{ job[0] }}">Email Address</label>
+                            <input type="email" id="enriched-email-{{ job[0] }}" placeholder="Email address" value="{{ job[14] or '' }}">
+                            <div class="validation-buttons">
+                                <button type="button" class="trello-btn trello-btn-secondary" onclick="validateEmail('{{ job[0] }}')">Validate Email</button>
+                            </div>
+                            <div id="email-result-{{ job[0] }}" class="validation-result" style="display: none;"></div>
                         </div>
                         <div class="form-group full-width">
-                            <label for="enrichment-author-{{ job[0] }}">Added by:</label>
+                            <label for="enrichment-author-{{ job[0] }}">Added by</label>
                             <select id="enrichment-author-{{ job[0] }}">
                                 <option value="Ashish">Ashish</option>
                                 <option value="Saloni">Saloni</option>
@@ -574,6 +603,70 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('submitterFilter').value = '';
             filterJobs();
+        }
+        
+        function openWhatsAppCheck(jobId) {
+            const phoneInput = document.getElementById(`enriched-phone-${jobId}`);
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                alert('Please enter a phone number with country code first (e.g. 254722831145)');
+                return;
+            }
+            
+            // Clean phone number (remove spaces, dashes, plus signs)
+            const cleanPhone = phone.replace(/[^\d]/g, '');
+            
+            if (cleanPhone.length < 10) {
+                alert('Please enter a valid phone number with country code');
+                return;
+            }
+            
+            // Create WhatsApp link
+            const whatsappUrl = `https://api.whatsapp.com/send/?phone=${cleanPhone}&text&type=phone_number&app_absent=0`;
+            
+            // Open in new tab
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        function validateEmail(jobId) {
+            const emailInput = document.getElementById(`enriched-email-${jobId}`);
+            const resultDiv = document.getElementById(`email-result-${jobId}`);
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address first');
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'validation-result validation-checking';
+            resultDiv.textContent = 'Validating email...';
+            
+            fetch('/validate_email', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: email})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.is_valid) {
+                        resultDiv.className = 'validation-result validation-valid';
+                        resultDiv.textContent = `✓ Valid email (${data.result || 'deliverable'})`;
+                    } else {
+                        resultDiv.className = 'validation-result validation-invalid';
+                        resultDiv.textContent = `✗ Invalid email (${data.result || 'undeliverable'})`;
+                    }
+                } else {
+                    resultDiv.className = 'validation-result validation-invalid';
+                    resultDiv.textContent = 'Error validating email: ' + (data.error || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                resultDiv.className = 'validation-result validation-invalid';
+                resultDiv.textContent = 'Error: ' + error;
+            });
         }
     </script>
 </body>

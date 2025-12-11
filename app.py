@@ -1876,35 +1876,27 @@ def generate_outreach():
             return jsonify({'success': True, 'message': message})
             
         elif outreach_type == 'email':
-            subject = data.get('subject', '')
-            followup_subject = data.get('followup_subject', '')
+            client_name = data.get('client_name', '')
+            client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Generate initial email
-            email_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional email body:"
+            # Use the new comprehensive email prompt
+            email_prompt = prompt.format(
+                job_description=job_description,
+                client_first_name=client_first_name,
+                main_email_output="{main_email_output}"
+            )
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=500
+                max_tokens=1500
             )
-            email_body = response.choices[0].message.content.strip()
             
-            # Generate follow-up email
-            followup_prompt = f"Generate a follow-up email body for this job if no response received to initial email:\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a polite follow-up email body:"
-            
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": followup_prompt}],
-                max_tokens=400
-            )
-            followup_body = response.choices[0].message.content.strip()
+            result = response.choices[0].message.content.strip()
             
             return jsonify({
                 'success': True,
-                'subject': subject or f"Regarding: {job_title}",
-                'body': email_body,
-                'followup_subject': followup_subject or f"Follow-up: {job_title}",
-                'followup_body': followup_body
+                'result': result
             })
             
     except Exception as e:

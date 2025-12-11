@@ -433,16 +433,7 @@
                 <label>Prompt:</label>
                 <textarea id="emailPrompt" style="width: 100%; height: 60px;">Generate professional email for this client after considering job title and job description.</textarea>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Subject:</label>
-                    <input type="text" id="emailSubject" style="width: 100%;" placeholder="Email subject">
-                </div>
-                <div class="form-group">
-                    <label>Follow-up Subject:</label>
-                    <input type="text" id="followupSubject" style="width: 100%;" placeholder="Follow-up subject">
-                </div>
-            </div>
+
             <button class="btn btn-success" onclick="generateEmail()">Generate Email</button>
             <button class="btn" style="background: #666; color: white; margin-left: 10px;" onclick="closeModal('emailModal')">Close</button>
             <div id="emailResult" style="margin-top: 20px;"></div>
@@ -650,9 +641,9 @@
         
         function generateEmail() {
             const prompt = document.getElementById('emailPrompt').value;
-            const subject = document.getElementById('emailSubject').value;
-            const followupSubject = document.getElementById('followupSubject').value;
             const resultDiv = document.getElementById('emailResult');
+            const jobId = currentJobData.id;
+            const clientName = document.getElementById(`name-${jobId}`)?.value || '';
             
             resultDiv.innerHTML = '<div style="text-align: center;">🔄 Generating emails...</div>';
             
@@ -662,8 +653,7 @@
                 body: JSON.stringify({
                     type: 'email',
                     prompt: prompt,
-                    subject: subject,
-                    followup_subject: followupSubject,
+                    client_name: clientName,
                     job_title: currentJobData.title,
                     job_description: currentJobData.description
                 })
@@ -672,15 +662,8 @@
             .then(data => {
                 if (data.success) {
                     resultDiv.innerHTML = `
-                        <h4>Initial Email:</h4>
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">
-                            <strong>Subject:</strong> ${data.subject}<br><br>
-                            <div style="white-space: pre-wrap;">${data.body}</div>
-                        </div>
-                        <h4>Follow-up Email:</h4>
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
-                            <strong>Subject:</strong> ${data.followup_subject}<br><br>
-                            <div style="white-space: pre-wrap;">${data.followup_body}</div>
+                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">
+                            ${data.result}
                         </div>
                     `;
                 } else {

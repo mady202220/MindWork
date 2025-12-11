@@ -328,7 +328,10 @@
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">✉️ Email</label>
-                            <input type="text" id="email-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="email-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input" style="flex: 1;">
+                                <button class="btn btn-sm" onclick="validateEmail('{{ job[0] }}')" style="background: #28a745; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
+                            </div>
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📞 Phone</label>
@@ -336,7 +339,10 @@
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📱 WhatsApp</label>
-                            <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input" style="flex: 1;">
+                                <button class="btn btn-sm" onclick="checkWhatsApp('{{ job[0] }}')" style="background: #25D366; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
+                            </div>
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🎯 Decision Maker</label>
@@ -712,6 +718,63 @@
             
             document.getElementById('pending-count').textContent = pendingCount;
             document.getElementById('sent-count').textContent = sentCount;
+        }
+        
+        function checkWhatsApp(jobId) {
+            const phoneInput = document.getElementById(`whatsapp-${jobId}`);
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                alert('Please enter a WhatsApp number first');
+                return;
+            }
+            
+            fetch('/check_whatsapp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({phone: phone})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const status = data.has_whatsapp ? '✅ Valid' : '❌ Invalid';
+                    alert(`WhatsApp Check: ${status}\n${data.note || ''}`);
+                } else {
+                    alert('Error checking WhatsApp: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+        
+        function validateEmail(jobId) {
+            const emailInput = document.getElementById(`email-${jobId}`);
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                alert('Please enter an email address first');
+                return;
+            }
+            
+            fetch('/validate_email', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email: email})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const status = data.is_valid ? '✅ Valid' : '❌ Invalid';
+                    const result = data.result ? ` (${data.result})` : '';
+                    alert(`Email Validation: ${status}${result}\n${data.note || ''}`);
+                } else {
+                    alert('Error validating email: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
         }
     </script>
 </body>

@@ -152,9 +152,10 @@
             </div>
             
             <!-- Collapsible Actions -->
-            <div id="actions-{{ job[0] }}" style="display: none; margin-top: 12px; padding: 16px; background: var(--gray-50); border-radius: 8px; border-left: 4px solid var(--primary-blue);">
-                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-                    <button class="btn btn-danger btn-sm" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
+            <div id="actions-{{ job[0] }}" class="trello-collapsible">
+                <div class="trello-actions">
+                    <button class="trello-btn trello-btn-danger" onclick="deleteJob('{{ job[0] }}')">Delete Job</button>
+                    <button class="trello-btn trello-btn-success" onclick="toggleEnrichment('{{ job[0] }}')">🔍 Enrich Client</button>
                 </div>
             </div>
             
@@ -482,7 +483,14 @@
         
         function toggleActions(jobId) {
             const actionsDiv = document.getElementById(`actions-${jobId}`);
-            actionsDiv.style.display = actionsDiv.style.display === 'none' ? 'block' : 'none';
+            const enrichmentDiv = document.getElementById(`enrichment-toggle-${jobId}`);
+            
+            if (actionsDiv.style.display === 'none') {
+                actionsDiv.style.display = 'block';
+            } else {
+                actionsDiv.style.display = 'none';
+                enrichmentDiv.style.display = 'none';
+            }
         }
         
         function toggleEnrichment(jobId) {

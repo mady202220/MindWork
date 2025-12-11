@@ -729,7 +729,7 @@
                 return;
             }
             
-            const whatsappUrl = `https://api.whatsapp.com/send/?phone=${phone}&text&type=phone_number&app_absent=0`;
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
             window.open(whatsappUrl, '_blank');
         }
         

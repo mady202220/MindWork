@@ -1276,31 +1276,66 @@ def create_job():
             if result:
                 rss_id = result[0]
         
+        # Check if job already exists
         if is_postgres:
-            c.execute("""INSERT INTO jobs 
-                        (id, title, description, url, client, budget, posted_date, 
-                         hourly_rate, skills, categories, rss_source_id)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                     (job_id, data.get('title', ''), data.get('description', ''), 
-                      data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
-                      data.get('posted_date', datetime.now().isoformat()), 
-                      data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
-                      data.get('categories', 'Not specified'), rss_id))
+            c.execute("SELECT id, enriched FROM jobs WHERE id = %s", (job_id,))
         else:
-            c.execute("""INSERT INTO jobs 
-                        (id, title, description, url, client, budget, posted_date, 
-                         hourly_rate, skills, categories, rss_source_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                     (job_id, data.get('title', ''), data.get('description', ''), 
-                      data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
-                      data.get('posted_date', datetime.now().isoformat()), 
-                      data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
-                      data.get('categories', 'Not specified'), rss_id))
+            c.execute("SELECT id, enriched FROM jobs WHERE id = ?", (job_id,))
+        existing_job = c.fetchone()
         
-        conn.commit()
-        conn.close()
-        
-        return jsonify({'success': True, 'jobId': job_id})
+        if existing_job:
+            # Job exists - update with enrichment data if not already enriched
+            if existing_job[1] != 1:  # Not enriched yet
+                if is_postgres:
+                    c.execute("""UPDATE jobs SET 
+                                client_name = %s, client_company = %s, 
+                                client_city = %s, client_country = %s
+                                WHERE id = %s""",
+                             (data.get('client_name', ''), data.get('client_company', ''),
+                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                else:
+                    c.execute("""UPDATE jobs SET 
+                                client_name = ?, client_company = ?, 
+                                client_city = ?, client_country = ?
+                                WHERE id = ?""",
+                             (data.get('client_name', ''), data.get('client_company', ''),
+                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                conn.commit()
+                conn.close()
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'updated'})
+            else:
+                conn.close()
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'already_enriched'})
+        else:
+            # New job - create with enrichment data
+            if is_postgres:
+                c.execute("""INSERT INTO jobs 
+                            (id, title, description, url, client, budget, posted_date, 
+                             hourly_rate, skills, categories, rss_source_id, client_name, 
+                             client_company, client_city, client_country)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                         (job_id, data.get('title', ''), data.get('description', ''), 
+                          data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
+                          data.get('posted_date', datetime.now().isoformat()), 
+                          data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
+                          data.get('categories', 'Not specified'), rss_id, data.get('client_name', ''),
+                          data.get('client_company', ''), data.get('client_city', ''), data.get('client_country', '')))
+            else:
+                c.execute("""INSERT INTO jobs 
+                            (id, title, description, url, client, budget, posted_date, 
+                             hourly_rate, skills, categories, rss_source_id, client_name, 
+                             client_company, client_city, client_country)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                         (job_id, data.get('title', ''), data.get('description', ''), 
+                          data['url'], data.get('client', 'Unknown'), data.get('budget', 'Not specified'),
+                          data.get('posted_date', datetime.now().isoformat()), 
+                          data.get('hourly_rate', 'Not specified'), data.get('skills', 'Not specified'),
+                          data.get('categories', 'Not specified'), rss_id, data.get('client_name', ''),
+                          data.get('client_company', ''), data.get('client_city', ''), data.get('client_country', '')))
+            
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True, 'jobId': job_id, 'action': 'created'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 

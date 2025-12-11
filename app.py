@@ -2150,8 +2150,7 @@ def validate_email():
                 return jsonify({
                     'success': True,
                     'is_valid': is_valid,
-                    'result': email_result,
-                    'confidence': result.get('flags', {}).get('has_dns', False)
+                    'result': email_result
                 })
             else:
                 return jsonify({

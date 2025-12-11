@@ -341,7 +341,7 @@
                             <label class="contact-label">📱 WhatsApp</label>
                             <div style="display: flex; gap: 8px;">
                                 <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input" style="flex: 1;">
-                                <button class="btn btn-sm" onclick="checkWhatsApp('{{ job[0] }}')" style="background: #25D366; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
+                                <button class="btn btn-sm" onclick="openWhatsAppCheck('{{ job[0] }}')" style="background: #25D366; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
                             </div>
                         </div>
                         <div class="contact-item">
@@ -720,7 +720,7 @@
             document.getElementById('sent-count').textContent = sentCount;
         }
         
-        function checkWhatsApp(jobId) {
+        function openWhatsAppCheck(jobId) {
             const phoneInput = document.getElementById(`whatsapp-${jobId}`);
             const phone = phoneInput.value.trim();
             
@@ -729,23 +729,8 @@
                 return;
             }
             
-            fetch('/check_whatsapp', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({phone: phone})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const status = data.has_whatsapp ? '✅ Valid' : '❌ Invalid';
-                    alert(`WhatsApp Check: ${status}\n${data.note || ''}`);
-                } else {
-                    alert('Error checking WhatsApp: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
+            const whatsappUrl = `https://api.whatsapp.com/send/?phone=${phone}&text&type=phone_number&app_absent=0`;
+            window.open(whatsappUrl, '_blank');
         }
         
         function validateEmail(jobId) {

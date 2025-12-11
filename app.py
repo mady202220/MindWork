@@ -21,6 +21,8 @@ app.secret_key = 'mindcrew_secret_key_2024'
 def after_request(response):
     origin = request.headers.get('Origin')
     if origin in ['https://www.upwork.com', 'http://localhost:3000', 'chrome-extension://']:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+    elif origin and origin.startswith('chrome-extension://'):
         response.headers.add('Access-Control-Allow-Origin', origin)
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Chrome-Extension')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
@@ -1245,6 +1247,63 @@ def get_rss_feeds_api():
                 'active': feed[3]
             })
         return jsonify({'success': True, 'feeds': feed_list})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/enrich-job', methods=['POST'])
+def enrich_job():
+    # Allow Chrome extension requests
+    if 'user_email' not in session and request.headers.get('X-Chrome-Extension') != 'mindwork':
+        return jsonify({'error': 'Authentication required'}), 401
+        
+    data = request.json
+    job_url = data.get('url')
+    
+    if not job_url:
+        return jsonify({'success': False, 'error': 'Job URL is required'})
+    
+    # Generate job ID from URL
+    job_id = hashlib.md5(job_url.encode()).hexdigest()
+    
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        # Check if job exists
+        if is_postgres:
+            c.execute("SELECT id, enriched FROM jobs WHERE id = %s", (job_id,))
+        else:
+            c.execute("SELECT id, enriched FROM jobs WHERE id = ?", (job_id,))
+        existing_job = c.fetchone()
+        
+        if existing_job:
+            # Job exists - update enrichment fields only if not already enriched
+            if existing_job[1] != 1:  # Not enriched yet
+                if is_postgres:
+                    c.execute("""UPDATE jobs SET 
+                                client_name = %s, client_company = %s, 
+                                client_city = %s, client_country = %s
+                                WHERE id = %s""",
+                             (data.get('client_name', ''), data.get('client_company', ''),
+                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                else:
+                    c.execute("""UPDATE jobs SET 
+                                client_name = ?, client_company = ?, 
+                                client_city = ?, client_country = ?
+                                WHERE id = ?""",
+                             (data.get('client_name', ''), data.get('client_company', ''),
+                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                conn.commit()
+                conn.close()
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'enrichment_updated'})
+            else:
+                conn.close()
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'already_enriched'})
+        else:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Job not found in database'})
+            
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 

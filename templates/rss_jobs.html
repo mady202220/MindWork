@@ -212,19 +212,19 @@
                     <div class="enrichment-form">
                         <div class="form-group">
                             <label for="client-company-{{ job[0] }}">Company Name</label>
-                            <input type="text" id="client-company-{{ job[0] }}" placeholder="Enter company name">
+                            <input type="text" id="client-company-{{ job[0] }}" placeholder="Enter company name" value="{{ job[10] or '' }}">
                         </div>
                         <div class="form-group">
                             <label for="client-name-{{ job[0] }}">Person Name</label>
-                            <input type="text" id="client-name-{{ job[0] }}" placeholder="Enter person name">
+                            <input type="text" id="client-name-{{ job[0] }}" placeholder="Enter person name" value="{{ job[9] or '' }}">
                         </div>
                         <div class="form-group">
                             <label for="client-city-{{ job[0] }}">City</label>
-                            <input type="text" id="client-city-{{ job[0] }}" placeholder="Enter city">
+                            <input type="text" id="client-city-{{ job[0] }}" placeholder="Enter city" value="{{ job[11] or '' }}">
                         </div>
                         <div class="form-group">
                             <label for="client-country-{{ job[0] }}">Country</label>
-                            <input type="text" id="client-country-{{ job[0] }}" placeholder="Enter country">
+                            <input type="text" id="client-country-{{ job[0] }}" placeholder="Enter country" value="{{ job[12] or '' }}">
                         </div>
                         <div class="form-group">
                             <label for="enriched-phone-{{ job[0] }}">Phone Number</label>

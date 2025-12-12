@@ -760,12 +760,32 @@ def enriched_jobs():
                      linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
                      categories, hourly_rate, site, rss_source_id, outreach_status, 
                      proposal_status, submitted_by, enriched_at, enriched_by
-                     FROM jobs WHERE enriched = 1 ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
+                     FROM jobs WHERE enriched = 1 AND (outreach_status != 'Sent' OR outreach_status IS NULL) ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
     else:
-        c.execute("SELECT * FROM jobs WHERE enriched = 1 ORDER BY datetime(posted_date) DESC")
+        c.execute("SELECT * FROM jobs WHERE enriched = 1 AND (outreach_status != 'Sent' OR outreach_status IS NULL) ORDER BY datetime(posted_date) DESC")
     jobs = c.fetchall()
     conn.close()
     return render_template('enriched_jobs.html', jobs=jobs)
+
+@app.route('/sent-jobs')
+@login_required
+def sent_jobs():
+    conn = system.get_db_connection()
+    c = conn.cursor()
+    is_postgres = os.getenv('DATABASE_URL') is not None
+    
+    if is_postgres:
+        c.execute("""SELECT id, title, description, url, client, budget, posted_date, processed,
+                     client_type, client_name, client_company, client_city, client_country, 
+                     linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
+                     categories, hourly_rate, site, rss_source_id, outreach_status, 
+                     proposal_status, submitted_by, enriched_at, enriched_by
+                     FROM jobs WHERE enriched = 1 AND outreach_status = 'Sent' ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
+    else:
+        c.execute("SELECT * FROM jobs WHERE enriched = 1 AND outreach_status = 'Sent' ORDER BY datetime(posted_date) DESC")
+    jobs = c.fetchall()
+    conn.close()
+    return render_template('sent_jobs.html', jobs=jobs)
 
 @app.route('/kanban')
 @login_required

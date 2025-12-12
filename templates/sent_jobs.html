@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Enriched Jobs - MindWork</title>
+    <title>Sent Jobs - MindWork</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@
         .job-header {
             padding: var(--space-6);
             border-bottom: 1px solid var(--gray-200);
-            background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
+            background: linear-gradient(135deg, #e8f5e8 0%, white 100%);
         }
         
         .job-title {
@@ -182,20 +182,29 @@
             margin-bottom: var(--space-4);
             opacity: 0.5;
         }
+        
+        .sent-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>✅ Enriched Jobs</h1>
-        <p>Jobs with complete client contact information ready for outreach</p>
+        <h1>📤 Sent Jobs</h1>
+        <p>Jobs where outreach has been completed and sent to clients</p>
     </div>
 
     <div class="nav-tabs">
         <a href="/" class="nav-tab">Dashboard</a>
         <a href="/rss/1" class="nav-tab">Web Development</a>
         <a href="/rss/2" class="nav-tab">Manual Jobs</a>
-        <a href="/enriched-jobs" class="nav-tab active">✅ Enriched</a>
-        <a href="/sent-jobs" class="nav-tab">📤 Sent</a>
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
+        <a href="/sent-jobs" class="nav-tab active">📤 Sent</a>
         <a href="/kanban" class="nav-tab">📋 Kanban</a>
         <a href="/team-management" class="nav-tab">👥 Team</a>
         <a href="/admin" class="nav-tab admin-tab">⚙️ Admin</a>
@@ -209,7 +218,7 @@
         
         <div class="search-box">
             <input type="text" id="searchInput" class="search-input" 
-                   placeholder="🔍 Search jobs by title, company, or client name..." 
+                   placeholder="🔍 Search sent jobs by title, company, or client name..." 
                    onkeyup="searchJobs()">
         </div>
         
@@ -256,10 +265,10 @@
 
         {% if jobs|length == 0 %}
         <div class="empty-state">
-            <div class="empty-icon">📋</div>
-            <h3>No enriched jobs yet</h3>
-            <p class="text-gray-600">Jobs will appear here after you enrich client contact information from the RSS feeds.</p>
-            <a href="/" class="btn btn-primary mt-4">Go to Dashboard</a>
+            <div class="empty-icon">📤</div>
+            <h3>No sent jobs yet</h3>
+            <p class="text-gray-600">Jobs will appear here automatically when their outreach status is changed to "Sent" in the Enriched tab.</p>
+            <a href="/enriched-jobs" class="btn btn-primary mt-4">Go to Enriched Jobs</a>
         </div>
         {% endif %}
 
@@ -277,13 +286,13 @@
                         <span>{{ job[5] }}</span>
                     </div>
                     <div class="job-meta-item">
-                        <span class="badge badge-{{ 'success' if job[24] == 'Sent' else 'warning' }}">{{ job[24] or 'Pending' }}</span>
+                        <span class="sent-badge">📤 Sent</span>
                     </div>
                 </div>
             </div>
             
             <!-- Compact Summary -->
-            <div style="padding: var(--space-4); background: var(--gray-50); border-radius: 8px; margin: 16px 0;">
+            <div style="padding: var(--space-4); background: #e8f5e8; border-radius: 8px; margin: 16px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <div>
                         <strong>📞 {{ job[9] or 'No Name' }}</strong> • 
@@ -329,10 +338,7 @@
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">✉️ Email</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" id="email-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input" style="flex: 1;">
-                                <button class="btn btn-sm" onclick="validateEmail('{{ job[0] }}')" style="background: #28a745; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
-                            </div>
+                            <input type="text" id="email-{{ job[0] }}" value="{{ job[14] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📞 Phone</label>
@@ -340,10 +346,7 @@
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">📱 WhatsApp</label>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input" style="flex: 1;">
-                                <button class="btn btn-sm" onclick="openWhatsAppCheck('{{ job[0] }}')" style="background: #25D366; color: white; padding: 8px 12px; font-size: 12px;">✓ Check</button>
-                            </div>
+                            <input type="text" id="whatsapp-{{ job[0] }}" value="{{ job[16] or '' }}" class="contact-input">
                         </div>
                         <div class="contact-item">
                             <label class="contact-label">🎯 Decision Maker</label>
@@ -352,8 +355,8 @@
                         <div class="contact-item">
                             <label class="contact-label">📤 Outreach Status</label>
                             <select id="outreach-status-{{ job[0] }}" class="contact-input">
-                                <option value="Pending" {% if not job[24] or job[24] == 'Pending' %}selected{% endif %}>Pending</option>
-                                <option value="Sent" {% if job[24] == 'Sent' %}selected{% endif %}>Sent</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Sent" selected>Sent</option>
                             </select>
                         </div>
                         <div class="contact-item">
@@ -384,220 +387,13 @@
                         <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
                         <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                         <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
-                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📱 WhatsApp</button>
-                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">💼 LinkedIn</button>
-                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📧 Email</button>
+                        <button class="btn btn-warning" onclick="moveBackToPending('{{ job[0] }}')">↩️ Move to Pending</button>
                         <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
-        </div>
-    </div>
-
-
-
-    <!-- WhatsApp Modal -->
-    <div id="whatsappModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; width: 500px; max-height: 80vh; overflow-y: auto;">
-            <h3>📱 Generate WhatsApp Message</h3>
-            <div class="form-group">
-                <label>Prompt:</label>
-                <textarea id="waPrompt" style="width: 100%; height: 150px;">You are an expert WhatsApp message writer for Upwork freelancers.
-
-Job Description: {job_description}
-Job Title: {job_title}
-Client Name: {client_first_name}
-
-ROLE:
-Write a friendly, casual WhatsApp message to reach out to a potential client about their Upwork job posting.
-
-REQUIREMENTS:
-- Maximum 500 characters (including spaces)
-- Casual, friendly tone (WhatsApp style)
-- Mention I'm Madhvi Sharma, freelancer
-- Reference their specific job briefly
-- Show I'm skilled in the required technologies
-- Include a simple question to engage them
-- End with call-to-action for a quick call
-- Use emojis sparingly (1-2 max)
-- No formal signatures needed
-
-STRUCTURE:
-1. Friendly greeting with their name
-2. Brief intro (I'm Madhvi, saw your Upwork job)
-3. Quick mention of relevant skills
-4. One engaging question about the project
-5. Suggest a quick call
-
-Keep it conversational and under 500 characters total.</textarea>
-            </div>
-            <button class="btn btn-success" onclick="generateWhatsApp()">Generate Message</button>
-            <button class="btn" style="background: #666; color: white; margin-left: 10px;" onclick="closeModal('whatsappModal')">Close</button>
-            <div id="waResult" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; display: none;"></div>
-        </div>
-    </div>
-
-    <!-- LinkedIn Modal -->
-    <div id="linkedinModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; width: 500px; max-height: 80vh; overflow-y: auto;">
-            <h3>💼 Generate LinkedIn Message</h3>
-            <div class="form-group">
-                <label>Prompt:</label>
-                <textarea id="liPrompt" style="width: 100%; height: 150px;">You are an expert LinkedIn message writer for professional outreach.
-
-Job Description: {job_description}
-Job Title: {job_title}
-Client Name: {client_first_name}
-
-ROLE:
-Write a professional LinkedIn message to connect with a potential client about their Upwork job posting.
-
-REQUIREMENTS:
-- Maximum 300 characters (including spaces)
-- Professional but friendly tone
-- Mention I'm Madhvi Sharma, freelancer
-- Reference their Upwork job briefly
-- Highlight relevant expertise quickly
-- Include connection request purpose
-- No emojis (professional platform)
-- Concise and direct
-
-STRUCTURE:
-1. Professional greeting with their name
-2. Brief intro (Madhvi, freelancer, saw Upwork job)
-3. Quick skill relevance mention
-4. Purpose: discuss project details
-5. Simple call-to-action
-
-Keep it professional and under 300 characters total.</textarea>
-            </div>
-            <button class="btn btn-success" onclick="generateLinkedIn()">Generate Message</button>
-            <button class="btn" style="background: #666; color: white; margin-left: 10px;" onclick="closeModal('linkedinModal')">Close</button>
-            <div id="liResult" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; display: none;"></div>
-        </div>
-    </div>
-
-    <!-- Email Modal -->
-    <div id="emailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; width: 600px; max-height: 80vh; overflow-y: auto;">
-            <h3>📧 Generate Email</h3>
-            <div class="form-group">
-                <label>Prompt:</label>
-                <textarea id="emailPrompt" style="width: 100%; height: 200px;">You are to generate TWO outputs from this prompt:
-1. One main email proposal for Upwork.
-2. Three follow-up reminder emails (progressively urgent but polite).
-
-====================================================
-SECTION 1: MAIN EMAIL GENERATION
-====================================================
-
-I am providing you a job description which you have to examine carefully:
-Job Description: {job_description}
-
-------------------------------------------
-
-ROLE:
-You are an expert email drafter, and I want you to write a simple, very short, enthusiastic, client-focused Upwork proposal email.
-
-Assume:
-- I am a freelancer (not a company).
-- I am an expert in the exact skills and technologies required in the job description.
-
-WRITING REQUIREMENTS:
-- Keep the email very short and easy for a 7th grader to read.
-- Include a polite apology for the direct approach.
-- Explain that I reached out because some details are missing, and answering them will help me write a better proposal.
-- The client must feel respected and prioritized.
-- The subject must include the word "Upwork" and relate directly to the job description.
-- Use "I" only.
-- Show confidence that I can successfully complete the work.
-- The link (if any) must appear in plain text.
-
-INTRODUCTION (MANDATORY):
-Start the email with the line:
-"I am Madhvi Sharma & wanted to speak to you regarding the job posted on Upwork."
-
-EMAIL STRUCTURE:
-
-1) SUBJECT LINE:
-- Must include the word "Upwork".
-- Must relate directly to the job description.
-
-2) FIRST PARAGRAPH:
-- Greet the recipient using their name: {client_first_name}
-- Add a respectful apology for approaching directly.
-- Explain briefly that some information is missing, and with a few answers, I can craft a more accurate and helpful proposal.
-- Mention that I am an expert in the key skills/technologies required in the job description (describe them briefly in simple language).
-
-3) SECOND PARAGRAPH (QUESTIONS SECTION):
-- Add one engaging sentence explaining that these questions will help me shape the right solution.
-- Ask exactly 3 very short, relevant questions.
-Format:
-Question 1:
-Question 2:
-Question 3:
-
-4) THIRD PARAGRAPH (CALL TO ACTION):
-Use this exact sentence:
-"If you have any further questions or require additional details, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-5) SIGNATURE:
-Best regards  
-Madhvi Sharma  
-Freelancer  
-Hiphype Tech  
-
-(If needed, you may remove 'Hiphype Tech' — but include it for now.)
-
-====================================================
-SECTION 2: REMINDER EMAIL GENERATION (3 emails)
-====================================================
-
-INPUT EMAIL (the full main email that you just created):
-{main_email_output}
-
-ROLE:
-You are an expert reminder-email writer.  
-Draft **three progressively urgent but courteous** follow-up reminder emails.
-
-REMINDER EMAIL RULES:
-1. Each reminder must be short, polite, and simple.  
-2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.  
-3. Each must add NEW value — a thought, suggestion, or detail about how I can help.  
-4. Do NOT repeat sentences from earlier reminders.  
-5. Add a line break after every paragraph.  
-6. End each reminder with this call to action:  
-   "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-SIGNATURE FOR ALL REMINDERS:
-Best regards,  
-Madhvi Sharma  
-Freelancer  
-Hiphype Tech  
-
-====================================================
-FINAL OUTPUT FORMAT
-====================================================
-Output must contain:
-
-MAIN EMAIL:
-<main_email_here>
-
-FOLLOW-UP REMINDER EMAIL 1:
-<email_1_here>
-
-FOLLOW-UP REMINDER EMAIL 2:
-<email_2_here>
-
-FOLLOW-UP REMINDER EMAIL 3:
-<email_3_here></textarea>
-            </div>
-
-            <button class="btn btn-success" onclick="generateEmail()">Generate Email</button>
-            <button class="btn" style="background: #666; color: white; margin-left: 10px;" onclick="closeModal('emailModal')">Close</button>
-            <div id="emailResult" style="margin-top: 20px;"></div>
         </div>
     </div>
 
@@ -638,7 +434,14 @@ FOLLOW-UP REMINDER EMAIL 3:
                         card.setAttribute('data-proposal-status', data.proposal_status);
                         card.setAttribute('data-submitted-by', data.submitted_by);
                     }
-                    alert('Enrichment data updated successfully!');
+                    
+                    // If outreach status changed from Sent, redirect to enriched jobs
+                    if (data.outreach_status !== 'Sent') {
+                        alert('Job moved back to Enriched tab!');
+                        window.location.href = '/enriched-jobs';
+                    } else {
+                        alert('Enrichment data updated successfully!');
+                    }
                 } else {
                     alert('Failed to update enrichment data');
                 }
@@ -646,6 +449,13 @@ FOLLOW-UP REMINDER EMAIL 3:
             .catch(error => {
                 alert('Error updating enrichment data: ' + error);
             });
+        }
+        
+        function moveBackToPending(jobId) {
+            if (confirm('Move this job back to Pending status in the Enriched tab?')) {
+                document.getElementById(`outreach-status-${jobId}`).value = 'Pending';
+                saveEnrichment(jobId);
+            }
         }
         
         function deleteJob(jobId) {
@@ -706,9 +516,6 @@ FOLLOW-UP REMINDER EMAIL 3:
                     card.style.display = 'none';
                 }
             });
-            
-            // Update stats to show filtered count
-            document.querySelector('.stat-card h3').textContent = visibleCount;
         }
         
         function clearFilters() {
@@ -719,126 +526,6 @@ FOLLOW-UP REMINDER EMAIL 3:
             applyFilters();
         }
         
-        let currentJobData = {};
-        
-        function openWhatsAppModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('whatsappModal').style.display = 'block';
-        }
-        
-        function openLinkedInModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('linkedinModal').style.display = 'block';
-        }
-        
-        function openEmailModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('emailModal').style.display = 'block';
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        function generateWhatsApp() {
-            const prompt = document.getElementById('waPrompt').value;
-            const resultDiv = document.getElementById('waResult');
-            
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<div style="text-align: center;">🔄 Generating WhatsApp message...</div>';
-            
-            fetch('/generate_outreach', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    type: 'whatsapp',
-                    prompt: prompt,
-                    job_title: currentJobData.title,
-                    job_description: currentJobData.description
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultDiv.innerHTML = `<h4>WhatsApp Message:</h4><div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">${data.message}</div>`;
-                } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
-                }
-            })
-            .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
-            });
-        }
-        
-        function generateLinkedIn() {
-            const prompt = document.getElementById('liPrompt').value;
-            const resultDiv = document.getElementById('liResult');
-            
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<div style="text-align: center;">🔄 Generating LinkedIn message...</div>';
-            
-            fetch('/generate_outreach', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    type: 'linkedin',
-                    prompt: prompt,
-                    job_title: currentJobData.title,
-                    job_description: currentJobData.description
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultDiv.innerHTML = `<h4>LinkedIn Message:</h4><div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">${data.message}</div>`;
-                } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
-                }
-            })
-            .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
-            });
-        }
-        
-        function generateEmail() {
-            const prompt = document.getElementById('emailPrompt').value;
-            const resultDiv = document.getElementById('emailResult');
-            const jobId = currentJobData.id;
-            const clientName = document.getElementById(`name-${jobId}`)?.value || '';
-            
-            resultDiv.innerHTML = '<div style="text-align: center;">🔄 Generating emails...</div>';
-            
-            fetch('/generate_outreach', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    type: 'email',
-                    prompt: prompt,
-                    client_name: clientName,
-                    job_title: currentJobData.title,
-                    job_description: currentJobData.description
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultDiv.innerHTML = `
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">
-                            ${data.result}
-                        </div>
-                    `;
-                } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
-                }
-            })
-            .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
-            });
-        }
-        
-        // Initialize stats
-        updateOutreachStats();
-        
         function toggleEnrichmentDetails(jobId) {
             const detailsDiv = document.getElementById(`enrichment-details-${jobId}`);
             if (detailsDiv.style.display === 'none') {
@@ -846,64 +533,6 @@ FOLLOW-UP REMINDER EMAIL 3:
             } else {
                 detailsDiv.style.display = 'none';
             }
-        }
-        
-        function updateOutreachStats() {
-            let pendingCount = 0;
-            let sentCount = 0;
-            
-            document.querySelectorAll('select[id*="outreach-status-"]').forEach(select => {
-                if (select.value === 'Sent') {
-                    sentCount++;
-                } else {
-                    pendingCount++;
-                }
-            });
-            
-            document.getElementById('pending-count').textContent = pendingCount;
-            document.getElementById('sent-count').textContent = sentCount;
-        }
-        
-        function openWhatsAppCheck(jobId) {
-            const phoneInput = document.getElementById(`whatsapp-${jobId}`);
-            const phone = phoneInput.value.trim();
-            
-            if (!phone) {
-                alert('Please enter a WhatsApp number first');
-                return;
-            }
-            
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
-            window.open(whatsappUrl, '_blank');
-        }
-        
-        function validateEmail(jobId) {
-            const emailInput = document.getElementById(`email-${jobId}`);
-            const email = emailInput.value.trim();
-            
-            if (!email) {
-                alert('Please enter an email address first');
-                return;
-            }
-            
-            fetch('/validate_email', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({email: email})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const status = data.is_valid ? '✅ Valid' : '❌ Invalid';
-                    const result = data.result ? ` (${data.result})` : '';
-                    alert(`Email Validation: ${status}${result}\n${data.note || ''}`);
-                } else {
-                    alert('Error validating email: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
         }
     </script>
 </body>

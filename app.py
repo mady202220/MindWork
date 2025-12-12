@@ -1948,7 +1948,7 @@ def generate_outreach():
         job_description = data['job_description']
         
         if outreach_type == 'whatsapp':
-            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a brief, friendly WhatsApp message with proper line breaks:"
+            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a brief, friendly WhatsApp message. Use double line breaks (\\n\\n) between paragraphs for proper formatting when copying to WhatsApp:"
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -1959,7 +1959,7 @@ def generate_outreach():
             return jsonify({'success': True, 'message': message})
             
         elif outreach_type == 'linkedin':
-            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional LinkedIn message:"
+            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional LinkedIn message. Use double line breaks (\\n\\n) between paragraphs for proper formatting when copying to LinkedIn:"
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -2003,7 +2003,7 @@ WRITING REQUIREMENTS:
 - Use "I" only.
 - Show confidence that I can successfully complete the work.
 - The link (if any) must appear in plain text.
-- Format for Gmail: Use double line breaks (\n\n) between paragraphs for proper spacing.
+- Format for Gmail: Use double line breaks (\\n\\n) between paragraphs for proper spacing.
 
 EMAIL STRUCTURE:
 

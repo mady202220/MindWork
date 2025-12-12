@@ -1948,7 +1948,7 @@ def generate_outreach():
         job_description = data['job_description']
         
         if outreach_type == 'whatsapp':
-            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a brief, friendly WhatsApp message:"
+            full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a brief, friendly WhatsApp message with proper line breaks:"
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -1973,17 +1973,109 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the new comprehensive email prompt
-            email_prompt = prompt.format(
-                job_description=job_description,
-                client_first_name=client_first_name,
-                main_email_output="{main_email_output}"
-            )
+            # Use the comprehensive email prompt with Gmail formatting
+            email_prompt = f"""You are to generate TWO outputs from this prompt:
+1. One main email proposal for Upwork.
+2. Three follow-up reminder emails (progressively urgent but polite).
+
+====================================================
+SECTION 1: MAIN EMAIL GENERATION
+====================================================
+
+I am providing you a job description which you have to examine carefully:
+Job Description: {job_description}
+
+------------------------------------------
+
+ROLE:
+You are an expert email drafter, and I want you to write a simple, very short, enthusiastic, client-focused Upwork proposal email.
+
+Assume:
+- I am a freelancer (not a company).
+- I am an expert in the exact skills and technologies required in the job description.
+
+WRITING REQUIREMENTS:
+- Keep the email very short and easy for a 7th grader to read.
+- Include a polite apology for the direct approach.
+- Explain that I reached out because some details are missing, and answering them will help me write a better proposal.
+- The client must feel respected and prioritized.
+- The subject must include the word "Upwork" and relate directly to the job description.
+- Use "I" only.
+- Show confidence that I can successfully complete the work.
+- The link (if any) must appear in plain text.
+- Format for Gmail: Use double line breaks (\n\n) between paragraphs for proper spacing.
+
+EMAIL STRUCTURE:
+
+1) SUBJECT LINE:
+- Must include the word "Upwork".
+- Must relate directly to the job description.
+
+2) FIRST PARAGRAPH:
+- Greet the recipient using their name: {client_first_name}
+- Then write this line "I am Madhvi Sharma & wanted to speak to you regarding the job posted on Upwork."
+- Add a respectful apology for approaching directly.
+- Explain briefly that some information is missing, and with a few answers, I can craft a more accurate and helpful proposal.
+- Mention that I am an expert in the key skills/technologies required in the job description (describe them briefly in simple language).
+
+3) SECOND PARAGRAPH (QUESTIONS SECTION):
+- Add one engaging sentence explaining that these questions will help me shape the right solution.
+- Ask exactly 3 very short, relevant questions.
+Format:
+Question 1:
+Question 2:
+Question 3:
+
+4) THIRD PARAGRAPH (CALL TO ACTION):
+Use this exact sentence:
+"If you have any further questions or require additional details, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+
+5) SIGNATURE:
+Best regards\nMadhvi Sharma
+
+====================================================
+SECTION 2: REMINDER EMAIL GENERATION (3 emails)
+====================================================
+
+ROLE:
+You are an expert reminder-email writer.
+Draft **three progressively urgent but courteous** follow-up reminder emails.
+
+REMINDER EMAIL RULES:
+1. Each reminder must be short, polite, and simple.
+2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.
+3. Each must add NEW value — a thought, suggestion, or detail about how I can help.
+4. Do NOT repeat sentences from earlier reminders.
+5. Use double line breaks (\n\n) between paragraphs for Gmail formatting.
+6. End each reminder with this call to action:
+   "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+
+SIGNATURE FOR ALL REMINDERS:
+Best regards,\nMadhvi Sharma
+
+====================================================
+FINAL OUTPUT FORMAT
+====================================================
+Output must contain:
+
+MAIN EMAIL:
+<main_email_here>
+
+FOLLOW-UP REMINDER EMAIL 1:
+<email_1_here>
+
+FOLLOW-UP REMINDER EMAIL 2:
+<email_2_here>
+
+FOLLOW-UP REMINDER EMAIL 3:
+<email_3_here>
+
+IMPORTANT: Format all emails with double line breaks (\n\n) between paragraphs so they display properly when copied to Gmail composer."""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=1500
+                max_tokens=2000
             )
             
             result = response.choices[0].message.content.strip()

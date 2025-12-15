@@ -384,9 +384,9 @@
                         <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
                         <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                         <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
-                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', '{{ job[1]|replace("'", "\\'")|replace('"', '\\"') }}', '{{ job[2][:200]|replace("'", "\\'")|replace('"', '\\"') }}')">📱 WhatsApp</button>
-                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', '{{ job[1]|replace("'", "\\'")|replace('"', '\\"') }}', '{{ job[2][:200]|replace("'", "\\'")|replace('"', '\\"') }}')">💼 LinkedIn</button>
-                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', '{{ job[1]|replace("'", "\\'")|replace('"', '\\"') }}', '{{ job[2][:200]|replace("'", "\\'")|replace('"', '\\"') }}')">📧 Email</button>
+                        <button class="btn btn-whatsapp" data-job-id="{{ job[0] }}" data-job-title="{{ job[1] }}" data-job-desc="{{ job[2][:200] }}">📱 WhatsApp</button>
+                        <button class="btn btn-linkedin" data-job-id="{{ job[0] }}" data-job-title="{{ job[1] }}" data-job-desc="{{ job[2][:200] }}">💼 LinkedIn</button>
+                        <button class="btn btn-email" data-job-id="{{ job[0] }}" data-job-title="{{ job[1] }}" data-job-desc="{{ job[2][:200] }}">📧 Email</button>
                         <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
@@ -982,30 +982,29 @@ FOLLOW-UP REMINDER EMAIL 3:
             });
         }
         
-        // Simple button handlers
-        function openWhatsApp(jobId) {
-            try {
-                window.open('https://wa.me/');
-            } catch(e) {
-                alert('WhatsApp opened');
+        // Event listeners for social buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-whatsapp')) {
+                const jobId = e.target.dataset.jobId;
+                const jobTitle = e.target.dataset.jobTitle;
+                const jobDesc = e.target.dataset.jobDesc;
+                openWhatsAppModal(jobId, jobTitle, jobDesc);
             }
-        }
-        
-        function openLinkedIn(jobId) {
-            try {
-                window.open('https://linkedin.com');
-            } catch(e) {
-                alert('LinkedIn opened');
+            
+            if (e.target.classList.contains('btn-linkedin')) {
+                const jobId = e.target.dataset.jobId;
+                const jobTitle = e.target.dataset.jobTitle;
+                const jobDesc = e.target.dataset.jobDesc;
+                openLinkedInModal(jobId, jobTitle, jobDesc);
             }
-        }
-        
-        function openEmail(jobId) {
-            try {
-                window.open('https://gmail.com');
-            } catch(e) {
-                alert('Gmail opened');
+            
+            if (e.target.classList.contains('btn-email')) {
+                const jobId = e.target.dataset.jobId;
+                const jobTitle = e.target.dataset.jobTitle;
+                const jobDesc = e.target.dataset.jobDesc;
+                openEmailModal(jobId, jobTitle, jobDesc);
             }
-        }
+        });
     </script>
 </body>
 </html>

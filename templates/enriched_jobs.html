@@ -810,17 +810,15 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(data => {
                 if (data.success) {
                     window.lastGeneratedMessage = data.message;
-                    resultDiv.innerHTML = `
-                        <h4>WhatsApp Message:</h4>
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">${data.message}</div>
-                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for WhatsApp</button>
-                    `;
+                    resultDiv.innerHTML = '<h4>WhatsApp Message:</h4>' +
+                        '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' + data.message + '</div>' +
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for WhatsApp</button>';
                 } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }
             })
             .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
+                resultDiv.innerHTML = '<div style="color: red;">Error: ' + error + '</div>';
             });
         }
         
@@ -845,17 +843,15 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(data => {
                 if (data.success) {
                     window.lastGeneratedMessage = data.message;
-                    resultDiv.innerHTML = `
-                        <h4>LinkedIn Message:</h4>
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">${data.message}</div>
-                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for LinkedIn</button>
-                    `;
+                    resultDiv.innerHTML = '<h4>LinkedIn Message:</h4>' +
+                        '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' + data.message + '</div>' +
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for LinkedIn</button>';
                 } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }
             })
             .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
+                resultDiv.innerHTML = '<div style="color: red;">Error: ' + error + '</div>';
             });
         }
         
@@ -882,18 +878,16 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(data => {
                 if (data.success) {
                     window.lastGeneratedEmail = data.result;
-                    resultDiv.innerHTML = `
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">
-                            ${data.result}
-                        </div>
-                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail)">📋 Copy for Gmail</button>
-                    `;
+                    resultDiv.innerHTML = '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' +
+                        data.result +
+                        '</div>' +
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail)">📋 Copy for Gmail</button>';
                 } else {
-                    resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
+                    resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }
             })
             .catch(error => {
-                resultDiv.innerHTML = `<div style="color: red;">Error: ${error}</div>`;
+                resultDiv.innerHTML = '<div style="color: red;">Error: ' + error + '</div>';
             });
         }
         
@@ -937,7 +931,7 @@ FOLLOW-UP REMINDER EMAIL 3:
                 return;
             }
             
-            const whatsappUrl = `https://api.whatsapp.com/send?phone=${phone}`;
+            const whatsappUrl = 'https://api.whatsapp.com/send?phone=' + phone;
             window.open(whatsappUrl, '_blank');
         }
         
@@ -960,7 +954,7 @@ FOLLOW-UP REMINDER EMAIL 3:
                 if (data.success) {
                     const status = data.is_valid ? '✅ Valid' : '❌ Invalid';
                     const result = data.result ? ` (${data.result})` : '';
-                    alert(`Email Validation: ${status}${result}\n${data.note || ''}`);
+                    alert('Email Validation: ' + status + result + '\n' + (data.note || ''));
                 } else {
                     alert('Error validating email: ' + data.error);
                 }

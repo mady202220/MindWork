@@ -896,9 +896,6 @@ FOLLOW-UP REMINDER EMAIL 3:
             });
         }
         
-        // Initialize stats
-        updateOutreachStats();
-        
         function toggleEnrichmentDetails(jobId) {
             const detailsDiv = document.getElementById(`enrichment-details-${jobId}`);
             if (detailsDiv.style.display === 'none') {
@@ -909,21 +906,25 @@ FOLLOW-UP REMINDER EMAIL 3:
         }
         
         function updateOutreachStats() {
-            let pendingCount = 0;
-            let sentCount = 0;
-            
-            document.querySelectorAll('select[id*="outreach-status-"]').forEach(select => {
-                if (select.value === 'Sent') {
-                    sentCount++;
-                } else {
-                    pendingCount++;
-                }
-            });
-            
-            const pendingEl = document.getElementById('pending-count');
-            const sentEl = document.getElementById('sent-count');
-            if (pendingEl) pendingEl.textContent = pendingCount;
-            if (sentEl) sentEl.textContent = sentCount;
+            try {
+                let pendingCount = 0;
+                let sentCount = 0;
+                
+                document.querySelectorAll('select[id*="outreach-status-"]').forEach(select => {
+                    if (select.value === 'Sent') {
+                        sentCount++;
+                    } else {
+                        pendingCount++;
+                    }
+                });
+                
+                const pendingEl = document.getElementById('pending-count');
+                const sentEl = document.getElementById('sent-count');
+                if (pendingEl) pendingEl.textContent = pendingCount;
+                if (sentEl) sentEl.textContent = sentCount;
+            } catch (error) {
+                console.log('Stats elements not found yet');
+            }
         }
         
         function openWhatsAppCheck(jobId) {

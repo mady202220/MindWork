@@ -384,9 +384,9 @@
                         <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
                         <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                         <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
-                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📱 WhatsApp</button>
-                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">💼 LinkedIn</button>
-                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', '{{ job[1] }}', '{{ job[2][:200] }}')">📧 Email</button>
+                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">📱 WhatsApp</button>
+                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">💼 LinkedIn</button>
+                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">📧 Email</button>
                         <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
@@ -860,8 +860,10 @@ FOLLOW-UP REMINDER EMAIL 3:
                 }
             });
             
-            document.getElementById('pending-count').textContent = pendingCount;
-            document.getElementById('sent-count').textContent = sentCount;
+            const pendingEl = document.getElementById('pending-count');
+            const sentEl = document.getElementById('sent-count');
+            if (pendingEl) pendingEl.textContent = pendingCount;
+            if (sentEl) sentEl.textContent = sentCount;
         }
         
         function openWhatsAppCheck(jobId) {

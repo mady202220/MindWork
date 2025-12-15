@@ -12,10 +12,34 @@ from urllib.parse import urlparse
 import time
 import threading
 import traceback
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 app = Flask(__name__)
 app.secret_key = 'mindcrew_secret_key_2024'
+
+# Text formatting functions for Gmail, LinkedIn, WhatsApp
+def format_text_for_copy(text):
+    """Format text for proper copying to Gmail, LinkedIn, WhatsApp"""
+    return re.sub(r'<br\s*\/?>', '\n', text, flags=re.IGNORECASE).replace('</p>', '\n\n').replace(re.sub(r'<p[^>]*>', '', text), text).replace(re.sub(r'<[^>]*>', '', text), text).replace(re.sub(r'\n{3,}', '\n\n', text), text).replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').strip()
+
+def copy_formatted_text(text):
+    """Return properly formatted text for clipboard"""
+    formatted = re.sub(r'<br\s*\/?>', '\n', text, flags=re.IGNORECASE)
+    formatted = re.sub(r'</p>', '\n\n', formatted, flags=re.IGNORECASE)
+    formatted = re.sub(r'<p[^>]*>', '', formatted, flags=re.IGNORECASE)
+    formatted = re.sub(r'<[^>]*>', '', formatted)
+    formatted = re.sub(r'\n{3,}', '\n\n', formatted)
+    formatted = formatted.replace('&nbsp;', ' ').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>').strip()
+    return formatted
+
+# API endpoint to format text for copying
+@app.route('/api/format-text', methods=['POST'])
+def format_text_api():
+    data = request.json
+    text = data.get('text', '')
+    formatted = copy_formatted_text(text)
+    return jsonify({'formatted_text': formatted})
 
 @app.after_request
 def after_request(response):
@@ -1976,7 +2000,8 @@ def generate_outreach():
                 max_tokens=250
             )
             message = response.choices[0].message.content.strip()
-            return jsonify({'success': True, 'message': message})
+            formatted_message = copy_formatted_text(message)
+            return jsonify({'success': True, 'message': formatted_message})
             
         elif outreach_type == 'linkedin':
             full_prompt = f"{prompt}\n\nJob Title: {job_title}\nJob Description: {job_description}\n\nGenerate a professional LinkedIn message. Use double line breaks (\\n\\n) between paragraphs for proper formatting when copying to LinkedIn:"
@@ -1987,7 +2012,8 @@ def generate_outreach():
                 max_tokens=400
             )
             message = response.choices[0].message.content.strip()
-            return jsonify({'success': True, 'message': message})
+            formatted_message = copy_formatted_text(message)
+            return jsonify({'success': True, 'message': formatted_message})
             
         elif outreach_type == 'email':
             client_name = data.get('client_name', '')
@@ -2099,10 +2125,11 @@ IMPORTANT: Format all emails with double line breaks (\n\n) between paragraphs s
             )
             
             result = response.choices[0].message.content.strip()
+            formatted_result = copy_formatted_text(result)
             
             return jsonify({
                 'success': True,
-                'result': result
+                'result': formatted_result
             })
             
     except Exception as e:

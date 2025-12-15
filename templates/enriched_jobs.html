@@ -602,6 +602,54 @@ FOLLOW-UP REMINDER EMAIL 3:
     </div>
 
     <script>
+        // Text formatting functions for Gmail, LinkedIn, WhatsApp
+        function formatTextForCopy(text) {
+            return text
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/p>/gi, '\n\n')
+                .replace(/<p[^>]*>/gi, '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .trim();
+        }
+        
+        function copyFormattedText(text) {
+            const formatted = formatTextForCopy(text);
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(formatted).then(() => {
+                    console.log('Text copied with proper formatting');
+                }).catch(err => {
+                    fallbackCopyTextToClipboard(formatted);
+                });
+            } else {
+                fallbackCopyTextToClipboard(formatted);
+            }
+        }
+        
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                console.log('Text copied using fallback method');
+            } catch (err) {
+                console.error('Fallback: Could not copy text');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
         function generateProposal(jobId) {
             // Redirect to RSS page for proposal generation
             window.location.href = `/rss/1?job=${jobId}`;
@@ -760,7 +808,11 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    resultDiv.innerHTML = `<h4>WhatsApp Message:</h4><div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">${data.message}</div>`;
+                    resultDiv.innerHTML = `
+                        <h4>WhatsApp Message:</h4>
+                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">${data.message}</div>
+                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText('${data.message.replace(/'/g, "\\'")}')">📋 Copy for WhatsApp</button>
+                    `;
                 } else {
                     resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
                 }
@@ -790,7 +842,11 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    resultDiv.innerHTML = `<h4>LinkedIn Message:</h4><div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">${data.message}</div>`;
+                    resultDiv.innerHTML = `
+                        <h4>LinkedIn Message:</h4>
+                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">${data.message}</div>
+                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText('${data.message.replace(/'/g, "\\'")}')">📋 Copy for LinkedIn</button>
+                    `;
                 } else {
                     resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;
                 }
@@ -823,9 +879,10 @@ FOLLOW-UP REMINDER EMAIL 3:
             .then(data => {
                 if (data.success) {
                     resultDiv.innerHTML = `
-                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-wrap;">
+                        <div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">
                             ${data.result}
                         </div>
+                        <button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText('${data.result.replace(/'/g, "\\'")}')">📋 Copy for Gmail</button>
                     `;
                 } else {
                     resultDiv.innerHTML = `<div style="color: red;">Error: ${data.error}</div>`;

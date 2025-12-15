@@ -609,19 +609,35 @@ FOLLOW-UP REMINDER EMAIL 3:
                 .replace(/<\/p>/gi, '\n\n')
                 .replace(/<p[^>]*>/gi, '')
                 .replace(/<[^>]*>/g, '')
-                .replace(/\n{3,}/g, '\n\n')
                 .replace(/&nbsp;/g, ' ')
                 .replace(/&amp;/g, '&')
                 .replace(/&lt;/g, '<')
                 .replace(/&gt;/g, '>')
+                .replace(/\n{3,}/g, '\n\n')
+                .replace(/Question \d+:/g, '\n\nQuestion $&')
+                .replace(/Best regards/g, '\n\nBest regards')
                 .trim();
         }
         
-        function copyFormattedText(text) {
-            const formatted = formatTextForCopy(text);
+        function copyFormattedText(text, type = 'email') {
+            let formatted = formatTextForCopy(text);
+            
+            // Platform-specific formatting
+            if (type === 'whatsapp') {
+                formatted = formatted
+                    .replace(/\n\n/g, '\n')
+                    .replace(/Best regards[\s\S]*$/g, '')
+                    .trim();
+            } else if (type === 'linkedin') {
+                formatted = formatted
+                    .replace(/\n\n/g, '\n')
+                    .replace(/Best regards[\s\S]*$/g, '')
+                    .trim();
+            }
+            
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(formatted).then(() => {
-                    console.log('Text copied with proper formatting');
+                    console.log(`Text copied for ${type} with proper formatting`);
                 }).catch(err => {
                     fallbackCopyTextToClipboard(formatted);
                 });
@@ -830,7 +846,7 @@ FOLLOW-UP REMINDER EMAIL 3:
                     window.lastGeneratedMessage = data.message;
                     resultDiv.innerHTML = '<h4>WhatsApp Message:</h4>' +
                         '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' + data.message + '</div>' +
-                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for WhatsApp</button>';
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage, \'whatsapp\')">📋 Copy for WhatsApp</button>';
                 } else {
                     resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }
@@ -863,7 +879,7 @@ FOLLOW-UP REMINDER EMAIL 3:
                     window.lastGeneratedMessage = data.message;
                     resultDiv.innerHTML = '<h4>LinkedIn Message:</h4>' +
                         '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' + data.message + '</div>' +
-                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage)">📋 Copy for LinkedIn</button>';
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedMessage, \'linkedin\')">📋 Copy for LinkedIn</button>';
                 } else {
                     resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }
@@ -899,7 +915,7 @@ FOLLOW-UP REMINDER EMAIL 3:
                     resultDiv.innerHTML = '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' +
                         data.result +
                         '</div>' +
-                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail)">📋 Copy for Gmail</button>';
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail, \'email\')">📋 Copy for Gmail</button>';
                 } else {
                     resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }

@@ -384,9 +384,9 @@
                         <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
                         <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                         <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
-                        <button class="btn btn-whatsapp" onclick="openWhatsAppModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">📱 WhatsApp</button>
-                        <button class="btn btn-linkedin" onclick="openLinkedInModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">💼 LinkedIn</button>
-                        <button class="btn btn-email" onclick="openEmailModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})">📧 Email</button>
+                        <button class="btn btn-whatsapp" onclick="try{openWhatsAppModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://wa.me/')}">📱 WhatsApp</button>
+                        <button class="btn btn-linkedin" onclick="try{openLinkedInModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://linkedin.com')}">💼 LinkedIn</button>
+                        <button class="btn btn-email" onclick="try{openEmailModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://gmail.com')}">📧 Email</button>
                         <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
@@ -771,18 +771,36 @@ FOLLOW-UP REMINDER EMAIL 3:
         let currentJobData = {};
         
         function openWhatsAppModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('whatsappModal').style.display = 'block';
+            try {
+                currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
+                document.getElementById('whatsappModal').style.display = 'block';
+            } catch(e) {
+                console.error('WhatsApp modal error:', e);
+                alert('Opening WhatsApp...');
+                window.open('https://wa.me/');
+            }
         }
         
         function openLinkedInModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('linkedinModal').style.display = 'block';
+            try {
+                currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
+                document.getElementById('linkedinModal').style.display = 'block';
+            } catch(e) {
+                console.error('LinkedIn modal error:', e);
+                alert('Opening LinkedIn...');
+                window.open('https://linkedin.com');
+            }
         }
         
         function openEmailModal(jobId, jobTitle, jobDescription) {
-            currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
-            document.getElementById('emailModal').style.display = 'block';
+            try {
+                currentJobData = {id: jobId, title: jobTitle, description: jobDescription};
+                document.getElementById('emailModal').style.display = 'block';
+            } catch(e) {
+                console.error('Email modal error:', e);
+                alert('Opening Gmail...');
+                window.open('https://gmail.com');
+            }
         }
         
         function closeModal(modalId) {

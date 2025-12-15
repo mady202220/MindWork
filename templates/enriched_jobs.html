@@ -638,6 +638,11 @@ FOLLOW-UP REMINDER EMAIL 3:
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(formatted).then(() => {
                     console.log(`Text copied for ${type} with proper formatting`);
+                    if (type === 'email') {
+                        alert('✅ Email copied!\n\nTip: Use Ctrl+Shift+V to paste in Gmail body (not subject) to preserve formatting.');
+                    } else {
+                        alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} message copied!`);
+                    }
                 }).catch(err => {
                     fallbackCopyTextToClipboard(formatted);
                 });

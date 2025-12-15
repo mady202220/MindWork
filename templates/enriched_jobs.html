@@ -756,7 +756,8 @@ FOLLOW-UP REMINDER EMAIL 3:
             });
             
             // Update stats to show filtered count
-            document.querySelector('.stat-card h3').textContent = visibleCount;
+            const statCard = document.querySelector('.stat-card h3');
+            if (statCard) statCard.textContent = visibleCount;
         }
         
         function clearFilters() {

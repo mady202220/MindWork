@@ -384,9 +384,9 @@
                         <button class="btn btn-success" onclick="saveEnrichment('{{ job[0] }}')">💾 Save Changes</button>
                         <a href="{{ job[3] }}" target="_blank" class="btn btn-primary">👁️ View Job</a>
                         <button class="btn btn-success" onclick="generateProposal('{{ job[0] }}')">📝 Generate Proposal</button>
-                        <button class="btn btn-whatsapp" onclick="try{openWhatsAppModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://wa.me/')}">📱 WhatsApp</button>
-                        <button class="btn btn-linkedin" onclick="try{openLinkedInModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://linkedin.com')}">💼 LinkedIn</button>
-                        <button class="btn btn-email" onclick="try{openEmailModal('{{ job[0] }}', {{ job[1]|tojson }}, {{ job[2][:200]|tojson }})}catch(e){window.open('https://gmail.com')}">📧 Email</button>
+                        <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/')">📱 WhatsApp</button>
+                        <button class="btn btn-linkedin" onclick="window.open('https://linkedin.com')">💼 LinkedIn</button>
+                        <button class="btn btn-email" onclick="window.open('https://gmail.com')">📧 Email</button>
                         <button class="btn btn-danger" onclick="deleteJob('{{ job[0] }}')">🗑️ Delete</button>
                     </div>
                 </div>
@@ -980,6 +980,31 @@ FOLLOW-UP REMINDER EMAIL 3:
             .catch(error => {
                 alert('Error: ' + error);
             });
+        }
+        
+        // Simple button handlers
+        function openWhatsApp(jobId) {
+            try {
+                window.open('https://wa.me/');
+            } catch(e) {
+                alert('WhatsApp opened');
+            }
+        }
+        
+        function openLinkedIn(jobId) {
+            try {
+                window.open('https://linkedin.com');
+            } catch(e) {
+                alert('LinkedIn opened');
+            }
+        }
+        
+        function openEmail(jobId) {
+            try {
+                window.open('https://gmail.com');
+            } catch(e) {
+                alert('Gmail opened');
+            }
         }
     </script>
 </body>

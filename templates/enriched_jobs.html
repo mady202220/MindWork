@@ -487,7 +487,9 @@ Keep it professional and under 300 characters total.</textarea>
                 <label>Prompt:</label>
                 <textarea id="emailPrompt" style="width: 100%; height: 200px;">✅ FINAL PROMPT — DIRECT OUTREACH EMAIL (UPWORK-SAFE, VALUE-LED)
 
-You are to generate ONE primary email only (no follow-ups in this version).
+You are to generate THREE outputs from this prompt:
+1. One main email proposal for Upwork.
+2. Two follow-up reminder emails (progressively urgent but polite).
 
 ====================================================
 SECTION 1: INPUTS
@@ -621,7 +623,44 @@ Include this exact sentence (unchanged):
 Use exactly:
 
 Thanks,
-Madhvi Sharma</textarea>
+Madhvi Sharma
+
+====================================================
+SECTION 5: FOLLOW-UP EMAIL GENERATION (2 emails)
+====================================================
+
+ROLE:
+You are an expert follow-up email writer.
+Draft **two progressively urgent but courteous** follow-up reminder emails.
+
+FOLLOW-UP EMAIL RULES:
+1. Each follow-up must be short, polite, and simple.
+2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.
+3. Each must add NEW value — a thought, suggestion, or detail about how I can help.
+4. Do NOT repeat sentences from earlier emails.
+5. Add a line break after every paragraph.
+6. End each follow-up with this call to action:
+   "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+7. Include the mandatory opt-out line in each follow-up:
+   "If this is not relevant, please feel free to reply with STOP and I will not follow up further."
+
+SIGNATURE FOR ALL FOLLOW-UPS:
+Thanks,
+Madhvi Sharma
+
+====================================================
+FINAL OUTPUT FORMAT
+====================================================
+Output must contain:
+
+MAIN EMAIL:
+<main_email_here>
+
+FOLLOW-UP EMAIL 1:
+<email_1_here>
+
+FOLLOW-UP EMAIL 2:
+<email_2_here></textarea>
             </div>
 
             <button class="btn btn-success" onclick="generateEmail()">Generate Email</button>

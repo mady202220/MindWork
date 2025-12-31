@@ -2019,85 +2019,169 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the comprehensive email prompt with Gmail formatting
-            email_prompt = f"""You are to generate TWO outputs from this prompt:
+            # Use the new UPWORK-SAFE, VALUE-LED prompt with 2 follow-ups
+            email_prompt = f"""✅ FINAL PROMPT — DIRECT OUTREACH EMAIL (UPWORK-SAFE, VALUE-LED)
+
+You are to generate THREE outputs from this prompt:
 1. One main email proposal for Upwork.
-2. Three follow-up reminder emails (progressively urgent but polite).
+2. Two follow-up reminder emails (progressively urgent but polite).
 
 ====================================================
-SECTION 1: MAIN EMAIL GENERATION
-====================================================
+SECTION 1: INPUTS
 
-I am providing you a job description which you have to examine carefully:
+Client First Name: {client_first_name}
+Job Title: {data.get('job_title', '')}
 Job Description: {job_description}
-
-------------------------------------------
-
-ROLE:
-You are an expert email drafter, and I want you to write a simple, very short, enthusiastic, client-focused Upwork proposal email.
-
-Assume:
-- I am a freelancer (not a company).
-- I am an expert in the exact skills and technologies required in the job description.
-
-WRITING REQUIREMENTS:
-- Keep the email very short and easy for a 7th grader to read.
-- Include a polite apology for the direct approach.
-- Explain that I reached out because some details are missing, and answering them will help me write a better proposal.
-- The client must feel respected and prioritized.
-- The subject must include the word "Upwork" and relate directly to the job description.
-- Use "I" only.
-- Show confidence that I can successfully complete the work.
-- The link (if any) must appear in plain text.
-- Format for Gmail: Use double line breaks (\\n\\n) between paragraphs for proper spacing.
-
-EMAIL STRUCTURE:
-
-1) SUBJECT LINE:
-- Must include the word "Upwork".
-- Must relate directly to the job description.
-
-2) FIRST PARAGRAPH:
-- Greet the recipient using their name: {client_first_name}
-- Then write this line "I am Madhvi Sharma & wanted to speak to you regarding the job posted on Upwork."
-- Add a respectful apology for approaching directly.
-- Explain briefly that some information is missing, and with a few answers, I can craft a more accurate and helpful proposal.
-- Mention that I am an expert in the key skills/technologies required in the job description (describe them briefly in simple language).
-
-3) SECOND PARAGRAPH (QUESTIONS SECTION):
-- Add one engaging sentence explaining that these questions will help me shape the right solution.
-- Ask exactly 3 very short, relevant questions.
-Format:
-Question 1:
-Question 2:
-Question 3:
-
-4) THIRD PARAGRAPH (CALL TO ACTION):
-Use this exact sentence:
-"If you have any further questions or require additional details, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-5) SIGNATURE:
-Best regards\nMadhvi Sharma
+Client Job Last Seen: Recently posted
 
 ====================================================
-SECTION 2: REMINDER EMAIL GENERATION (3 emails)
+SECTION 2: ROLE & CONTEXT
+
+ROLE:
+You are an expert senior freelancer writing a carefully worded, respectful outreach email to a client who posted a job on Upwork.
+
+CONTEXT:
+
+The client may be cautious about Upwork's policy on off-platform communication.
+
+The email must reduce fear, show respect for Upwork, and feel optional, not pushy.
+
+The goal is to initiate a conversation, not to close a deal in the email.
+
+ASSUME:
+
+I am an individual freelancer (not a company).
+
+If work proceeds, all payments and contracts will happen only via Upwork.
+
+I am confident, senior, and value-driven — not desperate or salesy.
+
+====================================================
+SECTION 3: WRITING REQUIREMENTS (STRICT)
+
+Write in simple, professional English (easy to read).
+
+Use "I" only.
+
+Do NOT use emojis.
+
+Do NOT attach links.
+
+Do NOT mention discounts.
+
+Do NOT use the words: "free", "free service", "no cost", "trial".
+
+Do NOT sound automated or promotional.
+
+Keep tone: respectful, calm, confident, ownership-oriented.
+
+====================================================
+SECTION 4: EMAIL STRUCTURE (MANDATORY)
+1) SUBJECT LINE
+
+Must include the word "Upwork"
+
+Must relate clearly to the job title
+
+2) OPENING PARAGRAPH (MANDATORY LOGIC)
+
+Greet the client using {client_first_name}
+
+Politely apologize for reaching out directly
+
+Clearly state respect for Upwork and that any engagement will happen only via Upwork
+
+Explain that you reached out because the job shows recent activity
+
+Clarify that you did not want to miss the opportunity if a decision has not been finalized
+
+3) CONTEXT & INTENT PARAGRAPH
+
+State that you would like to extend your interest only if the client has not already selected someone
+
+Briefly explain that you prefer working on:
+
+Fixed-price
+
+Milestone-based
+
+Clearly defined deliverables
+
+Position this as a low-pressure, clarity-first approach, not a commitment request
+
+4) VALUE-ADD PARAGRAPH (VERY IMPORTANT)
+
+Explain that in the first week, you typically focus on:
+
+Requirement clarity
+
+Technical approach / architecture direction
+
+Project setup
+
+Key screen or flow direction (if applicable)
+
+Frame this as a professional pre-engagement effort and value alignment phase
+
+Do NOT call it free
+
+Do NOT call it a demo
+
+Do NOT promise deliverables before contract
+
+5) CONFIDENCE & TRANSITION
+
+Express confidence that:
+
+The client will appreciate your communication
+
+Your ownership mindset will be visible early
+
+State that once alignment is clear, the monetary contract and milestones will be formalized via Upwork
+
+6) CALL TO ACTION
+
+Ask politely if the client would be open to a short introductory call
+
+Suggest 11:00 AM their time tomorrow
+
+Make it feel optional, not assumed
+
+7) OPT-OUT LINE (MANDATORY)
+
+Include this exact sentence (unchanged):
+
+"If this is not relevant, please feel free to reply with STOP and I will not follow up further."
+
+8) SIGNATURE
+
+Use exactly:
+
+Thanks,
+Madhvi Sharma
+
+====================================================
+SECTION 5: FOLLOW-UP EMAIL GENERATION (2 emails)
 ====================================================
 
 ROLE:
-You are an expert reminder-email writer.
-Draft **three progressively urgent but courteous** follow-up reminder emails.
+You are an expert follow-up email writer.
+Draft **two progressively urgent but courteous** follow-up reminder emails.
 
-REMINDER EMAIL RULES:
-1. Each reminder must be short, polite, and simple.
+FOLLOW-UP EMAIL RULES:
+1. Each follow-up must be short, polite, and simple.
 2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.
 3. Each must add NEW value — a thought, suggestion, or detail about how I can help.
-4. Do NOT repeat sentences from earlier reminders.
-5. Use double line breaks (\n\n) between paragraphs for Gmail formatting.
-6. End each reminder with this call to action:
+4. Do NOT repeat sentences from earlier emails.
+5. Add a line break after every paragraph.
+6. End each follow-up with this call to action:
    "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+7. Include the mandatory opt-out line in each follow-up:
+   "If this is not relevant, please feel free to reply with STOP and I will not follow up further."
 
-SIGNATURE FOR ALL REMINDERS:
-Best regards,\nMadhvi Sharma
+SIGNATURE FOR ALL FOLLOW-UPS:
+Thanks,
+Madhvi Sharma
 
 ====================================================
 FINAL OUTPUT FORMAT
@@ -2107,21 +2191,16 @@ Output must contain:
 MAIN EMAIL:
 <main_email_here>
 
-FOLLOW-UP REMINDER EMAIL 1:
+FOLLOW-UP EMAIL 1:
 <email_1_here>
 
-FOLLOW-UP REMINDER EMAIL 2:
-<email_2_here>
-
-FOLLOW-UP REMINDER EMAIL 3:
-<email_3_here>
-
-IMPORTANT: Format all emails with double line breaks (\n\n) between paragraphs so they display properly when copied to Gmail composer."""
+FOLLOW-UP EMAIL 2:
+<email_2_here>"""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=2000
+                max_tokens=1500
             )
             
             result = response.choices[0].message.content.strip()

@@ -485,114 +485,143 @@ Keep it professional and under 300 characters total.</textarea>
             <h3>📧 Generate Email</h3>
             <div class="form-group">
                 <label>Prompt:</label>
-                <textarea id="emailPrompt" style="width: 100%; height: 200px;">You are to generate TWO outputs from this prompt:
-1. One main email proposal for Upwork.
-2. Three follow-up reminder emails (progressively urgent but polite).
+                <textarea id="emailPrompt" style="width: 100%; height: 200px;">✅ FINAL PROMPT — DIRECT OUTREACH EMAIL (UPWORK-SAFE, VALUE-LED)
+
+You are to generate ONE primary email only (no follow-ups in this version).
 
 ====================================================
-SECTION 1: MAIN EMAIL GENERATION
-====================================================
+SECTION 1: INPUTS
 
-I am providing you a job description which you have to examine carefully:
+Client First Name: {client_first_name}
+Job Title: {job_title}
 Job Description: {job_description}
+Client Job Last Seen: {job_last_seen_time}
 
-------------------------------------------
+====================================================
+SECTION 2: ROLE & CONTEXT
 
 ROLE:
-You are an expert email drafter, and I want you to write a simple, very short, enthusiastic, client-focused Upwork proposal email.
+You are an expert senior freelancer writing a carefully worded, respectful outreach email to a client who posted a job on Upwork.
 
-Assume:
-- I am a freelancer (not a company).
-- I am an expert in the exact skills and technologies required in the job description.
+CONTEXT:
 
-WRITING REQUIREMENTS:
-- Keep the email very short and easy for a 7th grader to read.
-- Include a polite apology for the direct approach.
-- Explain that I reached out because some details are missing, and answering them will help me write a better proposal.
-- The client must feel respected and prioritized.
-- The subject must include the word "Upwork" and relate directly to the job description.
-- Use "I" only.
-- Show confidence that I can successfully complete the work.
-- The link (if any) must appear in plain text.
+The client may be cautious about Upwork's policy on off-platform communication.
 
-INTRODUCTION (MANDATORY):
-Start the email with the line:
-"I am Madhvi Sharma & wanted to speak to you regarding the job posted on Upwork."
+The email must reduce fear, show respect for Upwork, and feel optional, not pushy.
 
-EMAIL STRUCTURE:
+The goal is to initiate a conversation, not to close a deal in the email.
 
-1) SUBJECT LINE:
-- Must include the word "Upwork".
-- Must relate directly to the job description.
+ASSUME:
 
-2) FIRST PARAGRAPH:
-- Greet the recipient using their name: {client_first_name}
-- Add a respectful apology for approaching directly.
-- Explain briefly that some information is missing, and with a few answers, I can craft a more accurate and helpful proposal.
-- Mention that I am an expert in the key skills/technologies required in the job description (describe them briefly in simple language).
+I am an individual freelancer (not a company).
 
-3) SECOND PARAGRAPH (QUESTIONS SECTION):
-- Add one engaging sentence explaining that these questions will help me shape the right solution.
-- Ask exactly 3 very short, relevant questions.
-Format:
-Question 1:
-Question 2:
-Question 3:
+If work proceeds, all payments and contracts will happen only via Upwork.
 
-4) THIRD PARAGRAPH (CALL TO ACTION):
-Use this exact sentence:
-"If you have any further questions or require additional details, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-5) SIGNATURE:
-Best regards  
-Madhvi Sharma  
-Freelancer  
-Hiphype Tech  
-
-(If needed, you may remove 'Hiphype Tech' — but include it for now.)
+I am confident, senior, and value-driven — not desperate or salesy.
 
 ====================================================
-SECTION 2: REMINDER EMAIL GENERATION (3 emails)
-====================================================
+SECTION 3: WRITING REQUIREMENTS (STRICT)
 
-INPUT EMAIL (the full main email that you just created):
-{main_email_output}
+Write in simple, professional English (easy to read).
 
-ROLE:
-You are an expert reminder-email writer.  
-Draft **three progressively urgent but courteous** follow-up reminder emails.
+Use "I" only.
 
-REMINDER EMAIL RULES:
-1. Each reminder must be short, polite, and simple.  
-2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.  
-3. Each must add NEW value — a thought, suggestion, or detail about how I can help.  
-4. Do NOT repeat sentences from earlier reminders.  
-5. Add a line break after every paragraph.  
-6. End each reminder with this call to action:  
-   "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+Do NOT use emojis.
 
-SIGNATURE FOR ALL REMINDERS:
-Best regards,  
-Madhvi Sharma  
-Freelancer  
-Hiphype Tech  
+Do NOT attach links.
+
+Do NOT mention discounts.
+
+Do NOT use the words: "free", "free service", "no cost", "trial".
+
+Do NOT sound automated or promotional.
+
+Keep tone: respectful, calm, confident, ownership-oriented.
 
 ====================================================
-FINAL OUTPUT FORMAT
-====================================================
-Output must contain:
+SECTION 4: EMAIL STRUCTURE (MANDATORY)
+1) SUBJECT LINE
 
-MAIN EMAIL:
-<main_email_here>
+Must include the word "Upwork"
 
-FOLLOW-UP REMINDER EMAIL 1:
-<email_1_here>
+Must relate clearly to the job title
 
-FOLLOW-UP REMINDER EMAIL 2:
-<email_2_here>
+2) OPENING PARAGRAPH (MANDATORY LOGIC)
 
-FOLLOW-UP REMINDER EMAIL 3:
-<email_3_here></textarea>
+Greet the client using {client_first_name}
+
+Politely apologize for reaching out directly
+
+Clearly state respect for Upwork and that any engagement will happen only via Upwork
+
+Explain that you reached out because the job shows last activity as {job_last_seen_time}
+
+Clarify that you did not want to miss the opportunity if a decision has not been finalized
+
+3) CONTEXT & INTENT PARAGRAPH
+
+State that you would like to extend your interest only if the client has not already selected someone
+
+Briefly explain that you prefer working on:
+
+Fixed-price
+
+Milestone-based
+
+Clearly defined deliverables
+
+Position this as a low-pressure, clarity-first approach, not a commitment request
+
+4) VALUE-ADD PARAGRAPH (VERY IMPORTANT)
+
+Explain that in the first week, you typically focus on:
+
+Requirement clarity
+
+Technical approach / architecture direction
+
+Project setup
+
+Key screen or flow direction (if applicable)
+
+Frame this as a professional pre-engagement effort and value alignment phase
+
+Do NOT call it free
+
+Do NOT call it a demo
+
+Do NOT promise deliverables before contract
+
+5) CONFIDENCE & TRANSITION
+
+Express confidence that:
+
+The client will appreciate your communication
+
+Your ownership mindset will be visible early
+
+State that once alignment is clear, the monetary contract and milestones will be formalized via Upwork
+
+6) CALL TO ACTION
+
+Ask politely if the client would be open to a short introductory call
+
+Suggest 11:00 AM their time tomorrow
+
+Make it feel optional, not assumed
+
+7) OPT-OUT LINE (MANDATORY)
+
+Include this exact sentence (unchanged):
+
+"If this is not relevant, please feel free to reply with STOP and I will not follow up further."
+
+8) SIGNATURE
+
+Use exactly:
+
+Thanks,
+Madhvi Sharma</textarea>
             </div>
 
             <button class="btn btn-success" onclick="generateEmail()">Generate Email</button>
@@ -639,7 +668,9 @@ FOLLOW-UP REMINDER EMAIL 3:
                 navigator.clipboard.writeText(formatted).then(() => {
                     console.log(`Text copied for ${type} with proper formatting`);
                     if (type === 'email') {
-                        alert('✅ Email copied!\n\nTip: Use Ctrl+Shift+V to paste in Gmail body (not subject) to preserve formatting.');
+                        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                        const shortcut = isMac ? 'Cmd+Shift+V' : 'Ctrl+Shift+V';
+                        alert(`✅ Email copied!\n\nTip: Use ${shortcut} to paste in Gmail body (not subject) to preserve formatting.`);
                     } else {
                         alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} message copied!`);
                     }

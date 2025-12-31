@@ -2019,14 +2019,16 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the ultra-concise, bullet-based prompt
-            email_prompt = f"""✅ FINAL SHORT PROMPT — ULTRA-CONCISE, BULLET-BASED, UPWORK-SAFE
+            # Use the new polite, value-led prompt format
+            email_prompt = f"""✅ FINAL PROMPT — UPWORK DIRECT OUTREACH WITH 2 FOLLOW-UPS (POLITE & VALUE-LED)
 
-You are to generate THREE outputs:
+You are to generate THREE outputs from this prompt:
 
 One main outreach email
 
-Two follow-up reminder emails (progressively urgent but polite)
+Follow-up Email 1
+
+Follow-up Email 2
 
 ====================================================
 
@@ -2041,22 +2043,26 @@ Client Job Last Seen: Recently posted
 
 ====================================================
 
-SECTION 2: ROLE & GOAL
+SECTION 2: ROLE & OBJECTIVE
 
 ====================================================
 
 ROLE:
-You are a senior freelancer writing a very short, respectful outreach email to a client who posted a job on Upwork.
+You are a senior individual freelancer writing polite, respectful, consent-based emails to a client who posted a job on Upwork.
 
-GOAL:
+OBJECTIVE:
 
-Start a conversation
+Confirm whether the job is still open
 
-Reduce Upwork policy fear
+Reduce fear around Upwork off-platform communication
 
-Show senior ownership quickly
+Demonstrate senior ownership and responsibility
 
-Explain why the first week helps the client decide, not sell
+Explain the value of a one-week initial effort to help the client evaluate capabilities
+
+Ask for the client's preference before suggesting a call
+
+This is not a sales email. The goal is to start a respectful conversation.
 
 ====================================================
 
@@ -2064,19 +2070,21 @@ SECTION 3: WRITING RULES (STRICT)
 
 ====================================================
 
-VERY SHORT email
+Use simple, professional English
 
-Bullet points only (no long paragraphs)
+Use full sentences, even when writing bullet points
 
 Use "I" only
 
-Simple, professional English
+Keep emails short and skimmable
 
-No emojis
+Polite, calm, non-pushy tone
 
-No links
+Do NOT use emojis
 
-No discounts
+Do NOT include links
+
+Do NOT mention discounts
 
 Do NOT use these words:
 
@@ -2088,95 +2096,91 @@ trial
 
 no cost
 
-Calm, confident, non-salesy tone
+Do NOT sound promotional or urgent
 
 ====================================================
 
-SECTION 4: MAIN EMAIL STRUCTURE
+SECTION 4: MAIN EMAIL STRUCTURE (MANDATORY)
 
 ====================================================
 
-SUBJECT
+SUBJECT LINE
 
 Must include "Upwork"
 
-Must relate to the job title
+Must relate clearly to the job title
 
-OPENING (MANDATORY ORDER)
+OPENING
 
 Greet the client using {client_first_name}
 
 Introduce yourself clearly:
 
-"I'm Madhvi Sharma and I came across your job post on Upwork for {data.get('job_title', '')}."
+"I'm Madhvi Sharma, and I came across your job post on Upwork for {data.get('job_title', '')}."
 
-Add a polite apology for reaching out directly
+Add a sincere apology for reaching out directly
 
-State clearly:
+Clearly state that any work, contract, or payment will happen only via Upwork
 
-Any work or payment will happen only via Upwork
+State that you checked the posting and noticed it was last seen recently
 
-Mention:
+Politely explain that you wanted to confirm whether the role is still open or already closed
 
-The job shows recent activity
+JOB UNDERSTANDING (2–3 BULLETS)
 
-You didn't want to miss it if a decision isn't final
+Extract 2–3 concrete points from {job_description}
 
-JOB UNDERSTANDING (MAX 2–3 BULLETS)
+Paraphrase them in your own words
 
-Extract 2–3 specific points from {job_description}
+Show clear understanding of the scope or outcome
 
-Paraphrase briefly to show understanding
+INTEREST & WORKING STYLE
 
-Example:
+State that you are interested only if the client has not finalized someone
 
-From your post, this involves:
+Explain that you prefer:
 
-{{Key requirement 1}}
+Fixed-price work
 
-{{Key requirement 2}}
+Milestone-based structure
 
-WORKING APPROACH (2–3 BULLETS)
+Clearly defined deliverables
 
-Express interest only if no one is finalized
+Explicitly state that you take responsibility for scope clarification, so the client does not need to provide perfect requirements upfront
 
-State preference for:
+ONE-WEEK INITIAL EFFORT (IMPORTANT)
 
-Fixed price
+Explain that you typically invest the first week in:
 
-Milestone-based
+Clarifying requirements and assumptions yourself
 
-Clearly scoped deliverables
+Validating the technical and architectural direction
 
-Frame this as clarity-first, not commitment-driven
+Setting up the project foundation and aligning on key flows
 
-WHY FIRST WEEK MATTERS (MAX 3 BULLETS – VERY IMPORTANT)
+Explain that this helps the client:
 
-Explain value from the client's perspective:
+Evaluate your capabilities and communication
 
-I use the first week to:
+Reduce delivery and scope risk
 
-Clarify requirements and assumptions
+Make a confident selection decision
 
-Validate technical direction early
+Do NOT call this free, a demo, or unpaid work.
 
-Align on key flows or structure
+TRANSITION & CTA
 
-This helps you:
+State that once there is mutual alignment, milestones and commercial terms will be finalized via Upwork
 
-Compare approaches confidently
+Politely ask for the client's preference:
 
-Reduce rework and scope risk
+A short introductory call, or
 
-Make a better selection decision
+Continuing asynchronously first
 
-TRANSITION & CTA (2 BULLETS)
+Suggest 11:00 AM their time tomorrow, but make it optional
 
-Confirm milestones and commercial terms will be set via Upwork once aligned
-
-Ask politely if they're open to a short intro call at 11:00 AM their time tomorrow
-
-OPT-OUT (EXACT TEXT)
+OPT-OUT (MANDATORY — EXACT TEXT)
 
 "If this is not relevant, please feel free to reply with STOP and I will not follow up further."
 
@@ -2187,34 +2191,68 @@ Madhvi Sharma
 
 ====================================================
 
-SECTION 5: FOLLOW-UP EMAILS (2)
+SECTION 5: FOLLOW-UP EMAIL GENERATION (2 EMAILS)
 
 ====================================================
 
-RULES:
+GENERAL RULES FOR BOTH FOLLOW-UPS
 
-VERY SHORT
+Short and respectful
 
-Bullet-based
+Full sentences
 
-Add new value each time (tech clarity, risk reduction, decision help)
+No repetition of earlier wording
 
-Reference the job or requirement briefly
+Each follow-up must add new value
 
-Do NOT repeat wording from earlier emails
+Maintain Upwork-safe language
 
-END BOTH WITH (EXACT):
+Do NOT push for a call aggressively
+
+FOLLOW-UP EMAIL 1 (Gentle Reminder + Added Insight)
+
+Acknowledge that the client may be busy
+
+Reconfirm respect for Upwork and their process
+
+Add one new helpful insight related to:
+
+Technical approach, or
+
+Architecture choice, or
+
+Risk to avoid in similar projects
+
+Softly restate availability for discussion
+
+End with:
 "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
 
-Include the opt-out line in both.
+Include the opt-out line exactly.
 
-SIGNATURE:
+FOLLOW-UP EMAIL 2 (Final, Polite Check-In)
+
+Keep it very short
+
+Focus on clarity and closure
+
+Reiterate willingness to step back if the role is closed
+
+Emphasize respect for their decision and time
+
+End with:
+"If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+
+Include the opt-out line exactly.
+
+SIGNATURE FOR BOTH FOLLOW-UPS (EXACT)
+
 Thanks,
 Madhvi Sharma
 
 ====================================================
 
-FINAL OUTPUT FORMAT
+FINAL OUTPUT FORMAT (STRICT)
 
 ====================================================
 
@@ -2227,7 +2265,7 @@ FOLLOW-UP EMAIL 2:"""
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=1600
+                max_tokens=1800
             )
             
             result = response.choices[0].message.content.strip()

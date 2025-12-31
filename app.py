@@ -2019,15 +2019,20 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the new UPWORK-SAFE, VALUE-LED prompt with 2 follow-ups
-            email_prompt = f"""✅ FINAL PROMPT — DIRECT OUTREACH EMAIL (UPWORK-SAFE, VALUE-LED)
+            # Use the improved POINTER-BASED, UPWORK-SAFE prompt
+            email_prompt = f"""✅ IMPROVED FINAL PROMPT — DIRECT OUTREACH (POINTER-BASED, UPWORK-SAFE)
 
 You are to generate THREE outputs from this prompt:
-1. One main email proposal for Upwork.
-2. Two follow-up reminder emails (progressively urgent but polite).
+
+One main outreach email
+
+Two follow-up reminder emails (progressively urgent but polite)
 
 ====================================================
+
 SECTION 1: INPUTS
+
+====================================================
 
 Client First Name: {client_first_name}
 Job Title: {data.get('job_title', '')}
@@ -2035,172 +2040,216 @@ Job Description: {job_description}
 Client Job Last Seen: Recently posted
 
 ====================================================
-SECTION 2: ROLE & CONTEXT
+
+SECTION 2: ROLE & OBJECTIVE
+
+====================================================
 
 ROLE:
-You are an expert senior freelancer writing a carefully worded, respectful outreach email to a client who posted a job on Upwork.
+You are a senior, experienced freelancer writing a carefully worded, respectful outreach email to a client who posted a job on Upwork.
 
-CONTEXT:
+OBJECTIVE:
 
-The client may be cautious about Upwork's policy on off-platform communication.
+Initiate a conversation
 
-The email must reduce fear, show respect for Upwork, and feel optional, not pushy.
+Reduce fear around Upwork policy
 
-The goal is to initiate a conversation, not to close a deal in the email.
+Demonstrate senior ownership and clarity
 
-ASSUME:
-
-I am an individual freelancer (not a company).
-
-If work proceeds, all payments and contracts will happen only via Upwork.
-
-I am confident, senior, and value-driven — not desperate or salesy.
+Position the first week of work as a decision-enabling phase, not a sales pitch
 
 ====================================================
-SECTION 3: WRITING REQUIREMENTS (STRICT)
 
-Write in simple, professional English (easy to read).
-
-Use "I" only.
-
-Do NOT use emojis.
-
-Do NOT attach links.
-
-Do NOT mention discounts.
-
-Do NOT use the words: "free", "free service", "no cost", "trial".
-
-Do NOT sound automated or promotional.
-
-Keep tone: respectful, calm, confident, ownership-oriented.
+SECTION 3: WRITING CONSTRAINTS (STRICT)
 
 ====================================================
-SECTION 4: EMAIL STRUCTURE (MANDATORY)
-1) SUBJECT LINE
 
-Must include the word "Upwork"
+Write in short bullet points, not long paragraphs
+
+Keep the email very short and skimmable
+
+Use "I" only
+
+Professional, calm, confident tone
+
+Do NOT use emojis
+
+Do NOT attach links
+
+Do NOT mention discounts
+
+Do NOT use these words:
+
+"free"
+
+"free service"
+
+"trial"
+
+"no cost"
+
+Do NOT sound promotional or automated
+
+====================================================
+
+SECTION 4: MAIN EMAIL STRUCTURE (MANDATORY)
+
+====================================================
+
+SUBJECT LINE
+
+Must include "Upwork"
 
 Must relate clearly to the job title
 
-2) OPENING PARAGRAPH (MANDATORY LOGIC)
+OPENING (2–3 BULLET POINTS)
 
 Greet the client using {client_first_name}
 
-Politely apologize for reaching out directly
+Apologize politely for reaching out directly
 
 Clearly state respect for Upwork and that any engagement will happen only via Upwork
 
-Explain that you reached out because the job shows recent activity
+Mention you reached out because the job shows recent activity
 
-Clarify that you did not want to miss the opportunity if a decision has not been finalized
+Clarify this is only in case a decision has not been finalized
 
-3) CONTEXT & INTENT PARAGRAPH
+JOB UNDERSTANDING (MANDATORY – 2–3 BULLETS)
 
-State that you would like to extend your interest only if the client has not already selected someone
+Extract 2–3 concrete points from {job_description}
 
-Briefly explain that you prefer working on:
+Paraphrase them simply to show understanding (no copy-paste)
+
+Keep it factual and specific (tech, scope, or outcome)
+
+Example style:
+
+Based on your post, this involves:
+
+{{Key requirement 1}}
+
+{{Key requirement 2}}
+
+{{Key requirement 3 (if applicable)}}
+
+INTENT & WORKING STYLE (3 BULLETS)
+
+State interest only if the client has not selected someone
+
+Explain preference for:
 
 Fixed-price
 
 Milestone-based
 
-Clearly defined deliverables
+Clearly scoped deliverables
 
-Position this as a low-pressure, clarity-first approach, not a commitment request
+Position this as clarity-first and low-pressure
 
-4) VALUE-ADD PARAGRAPH (VERY IMPORTANT)
+FIRST-WEEK VALUE (VERY IMPORTANT – 4 BULLETS)
 
-Explain that in the first week, you typically focus on:
+Explain why the first week matters for the client's decision, not for you:
 
-Requirement clarity
+I typically use the first week to:
 
-Technical approach / architecture direction
+Remove ambiguity from requirements
 
-Project setup
+Validate the technical direction / architecture choices
 
-Key screen or flow direction (if applicable)
+Set up the project foundation correctly
 
-Frame this as a professional pre-engagement effort and value alignment phase
+Align on key screens, flows, or logic early
 
-Do NOT call it free
+This helps you:
 
-Do NOT call it a demo
+Compare approaches before committing long-term
 
-Do NOT promise deliverables before contract
+Reduce rework, scope creep, and delivery risk
 
-5) CONFIDENCE & TRANSITION
+Make a confident selection decision
 
-Express confidence that:
+(Do NOT call this free, demo, or unpaid)
 
-The client will appreciate your communication
+CONFIDENCE & TRANSITION (2 BULLETS)
 
-Your ownership mindset will be visible early
+Express confidence in your communication and ownership
 
-State that once alignment is clear, the monetary contract and milestones will be formalized via Upwork
+State that once alignment is clear, milestones and commercial terms will be formalized via Upwork
 
-6) CALL TO ACTION
+CALL TO ACTION (1–2 BULLETS)
 
-Ask politely if the client would be open to a short introductory call
+Ask politely if the client would be open to a short intro call
 
 Suggest 11:00 AM their time tomorrow
 
-Make it feel optional, not assumed
+Make it optional, not assumed
 
-7) OPT-OUT LINE (MANDATORY)
-
-Include this exact sentence (unchanged):
+OPT-OUT (MANDATORY – EXACT TEXT)
 
 "If this is not relevant, please feel free to reply with STOP and I will not follow up further."
 
-8) SIGNATURE
-
-Use exactly:
+SIGNATURE (EXACT)
 
 Thanks,
 Madhvi Sharma
 
 ====================================================
-SECTION 5: FOLLOW-UP EMAIL GENERATION (2 emails)
+
+SECTION 5: FOLLOW-UP EMAIL GENERATION (2 EMAILS)
+
 ====================================================
 
 ROLE:
 You are an expert follow-up email writer.
-Draft **two progressively urgent but courteous** follow-up reminder emails.
 
-FOLLOW-UP EMAIL RULES:
-1. Each follow-up must be short, polite, and simple.
-2. Each must show that I can handle the project because I am skilled in the technologies mentioned in the job description.
-3. Each must add NEW value — a thought, suggestion, or detail about how I can help.
-4. Do NOT repeat sentences from earlier emails.
-5. Add a line break after every paragraph.
-6. End each follow-up with this call to action:
-   "If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-7. Include the mandatory opt-out line in each follow-up:
-   "If this is not relevant, please feel free to reply with STOP and I will not follow up further."
+RULES FOR BOTH FOLLOW-UPS:
 
-SIGNATURE FOR ALL FOLLOW-UPS:
+Short, bullet-based
+
+Polite, respectful, calm
+
+Add new value in each email
+
+Reference:
+
+Job requirement OR
+
+Risk reduction OR
+
+Decision clarity
+
+Do NOT repeat sentences from earlier emails
+
+Add a line break after every paragraph
+
+End BOTH with this exact CTA:
+
+"If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
+
+Include the opt-out line in both:
+
+"If this is not relevant, please feel free to reply with STOP and I will not follow up further."
+
+SIGNATURE FOR BOTH:
 Thanks,
 Madhvi Sharma
 
 ====================================================
-FINAL OUTPUT FORMAT
+
+FINAL OUTPUT FORMAT (STRICT)
+
 ====================================================
-Output must contain:
 
 MAIN EMAIL:
-<main_email_here>
 
 FOLLOW-UP EMAIL 1:
-<email_1_here>
 
-FOLLOW-UP EMAIL 2:
-<email_2_here>"""
+FOLLOW-UP EMAIL 2:"""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=1500
+                max_tokens=1800
             )
             
             result = response.choices[0].message.content.strip()

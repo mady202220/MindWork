@@ -485,39 +485,34 @@ Keep it professional and under 300 characters total.</textarea>
             <h3>📧 Generate Email</h3>
             <div class="form-group">
                 <label>Prompt:</label>
-                <textarea id="emailPrompt" style="width: 100%; height: 200px;">✅ FINAL PROMPT — 500-CHARACTER UPWORK OUTREACH (JOB TITLE INCLUDED)
+                <textarea id="emailPrompt" style="width: 100%; height: 200px;">✅ FINAL REVERSE PROMPT — GMAIL-READY, POLITE UPWORK OUTREACH
 
 You are to generate ONE email only.
 
 ====================================================
-
 INPUTS
-
-====================================================
 
 Client First Name: {client_first_name}
 Job Title: {job_title}
 Job Last Seen: {job_last_seen_time}
 
 ====================================================
-
 ROLE
 
-====================================================
+You are a senior individual freelancer writing a polite, respectful, and well-mannered email to a client who posted a job on Upwork.
 
-You are a senior individual freelancer writing a very short, polite, and respectful email to a client who posted a job on Upwork.
-
-====================================================
-
-HARD CONSTRAINTS (VERY IMPORTANT)
+The email must be safe, calm, and optional in tone, suitable for clients who may be cautious about off-platform communication.
 
 ====================================================
+WRITING RULES (STRICT)
 
-The email must be EXACTLY 500 characters (including spaces and line breaks)
+Write in plain text only (no markdown, no bullets, no symbols)
 
-Do NOT exceed or go below 500 characters
+Use normal paragraphs and line breaks suitable for Gmail
 
-Use simple professional English
+Use simple, professional English
+
+Use full sentences only
 
 Use "I" only
 
@@ -528,94 +523,62 @@ No links
 No discounts
 
 Do NOT use these words:
-
 free
-
 free service
-
 trial
-
 demo
 
-====================================================
-
-CONTENT REQUIREMENTS (MANDATORY)
+Do NOT sound salesy, pushy, or transactional
 
 ====================================================
+EMAIL CONTENT REQUIREMENTS (MANDATORY ORDER)
 
-The email must include, in this exact order:
+The email must be written exactly in the following sequence:
 
-One-line introduction
+Greeting
+Start with:
+Dear {client_first_name},
 
-Introduce yourself as Madhvi Sharma
+Introduction
+Introduce yourself clearly and naturally in one sentence:
+"I'm Madhvi Sharma, and I came across your Job Title: {job_title} on Upwork."
 
-Explicitly write:
-"I saw your Job Title: {job_title} on Upwork."
+Apology and reason for contacting
+Politely apologize for reaching out directly.
+State that you checked the job and noticed it was last seen {job_last_seen_time}.
+Explain, in a respectful way, that you wanted to confirm whether the role is still open or has already been closed.
 
-Second line – Apology + reason
+One-week work offer (politely phrased)
+State that if the role is still open, you would be happy to spend one week working closely to demonstrate your skills, communication, ownership, and responsiveness.
+Clearly state that there is no payment commitment during this period.
+Use soft, optional language (for example: "would be happy to", "if helpful", "if you feel comfortable").
 
-Apologize politely for reaching out directly
-
-Clearly state:
-
-You checked the job
-
-It was last seen {job_last_seen_time}
-
-You wanted to confirm whether the job is still open or has gone cold
-
-One-line value offer
-
-State that you are willing to work for one week
-
-Purpose: to demonstrate skills, communication, ownership, and responsiveness
-
-Clearly state there is no payment commitment during this period
-
-Do NOT use the word "free" or "trial"
-
-Hiring condition
-
-State that if the client is satisfied, hiring will proceed
-
-Explicitly say: only via Upwork
-
-Clearly state there will be no work outside Upwork
+Upwork compliance
+Clearly state that if the client is satisfied, any engagement will proceed strictly via Upwork, and there will be no work outside the platform.
 
 Polite closing
+Thank the client for their time and consideration.
 
-Thank the client
+Signature
+Close exactly with:
 
-Sign with:
+Warm regards,
 Madhvi Sharma
 
 ====================================================
+LENGTH & FORMAT
 
-TONE
+Keep the email short and readable
 
-====================================================
+Use short paragraphs (1–2 sentences each)
 
-Polite
-
-Calm
-
-Respectful
-
-Consent-based
-
-Not salesy
-
-Not pushy
+Ensure the output can be copied directly into Gmail without editing
 
 ====================================================
-
 OUTPUT FORMAT
 
-====================================================
-
-Output ONLY the email body.
-No explanations.
-No character count text.</textarea>
+Output only the email body.
+Do not include explanations, labels, or meta text.</textarea>
             </div>
 
             <button class="btn btn-success" onclick="generateEmail()">Generate Email</button>
@@ -942,10 +905,16 @@ No character count text.</textarea>
             .then(data => {
                 if (data.success) {
                     window.lastGeneratedEmail = data.result;
-                    resultDiv.innerHTML = '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; white-space: pre-line; font-family: monospace;">' +
-                        data.result +
+                    // Format the email with proper line breaks for display
+                    const formattedEmail = data.result.replace(/\n/g, '<br>');
+                    resultDiv.innerHTML = '<h4>Generated Email:</h4>' +
+                        '<div style="background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif; line-height: 1.6;">' + 
+                        formattedEmail + 
                         '</div>' +
-                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail, \'email\')">📋 Copy for Gmail</button>';
+                        '<button class="btn btn-success" style="margin-top: 10px;" onclick="copyFormattedText(window.lastGeneratedEmail, \'email\')">📋 Copy for Gmail</button>' +
+                        '<div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 4px; font-size: 12px; color: #666;">' +
+                        '<strong>Gmail Tip:</strong> Use Ctrl+Shift+V (or Cmd+Shift+V on Mac) to paste as plain text in Gmail body.' +
+                        '</div>';
                 } else {
                     resultDiv.innerHTML = '<div style="color: red;">Error: ' + data.error + '</div>';
                 }

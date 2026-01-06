@@ -2019,40 +2019,35 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the new 500-character constraint prompt
-            email_prompt = f"""✅ FINAL PROMPT — 500-CHARACTER UPWORK OUTREACH (JOB TITLE INCLUDED)
+            # Use the new Gmail-ready, polite prompt format
+            email_prompt = f"""✅ FINAL REVERSE PROMPT — GMAIL-READY, POLITE UPWORK OUTREACH
 
 You are to generate ONE email only.
 
 ====================================================
-
 INPUTS
-
-====================================================
 
 Client First Name: {client_first_name}
 Job Title: {data.get('job_title', '')}
 Job Last Seen: Recently posted
 
 ====================================================
-
 ROLE
 
-====================================================
+You are a senior individual freelancer writing a polite, respectful, and well-mannered email to a client who posted a job on Upwork.
 
-You are a senior individual freelancer writing a very short, polite, and respectful email to a client who posted a job on Upwork.
-
-====================================================
-
-HARD CONSTRAINTS (VERY IMPORTANT)
+The email must be safe, calm, and optional in tone, suitable for clients who may be cautious about off-platform communication.
 
 ====================================================
+WRITING RULES (STRICT)
 
-The email must be EXACTLY 500 characters (including spaces and line breaks)
+Write in plain text only (no markdown, no bullets, no symbols)
 
-Do NOT exceed or go below 500 characters
+Use normal paragraphs and line breaks suitable for Gmail
 
-Use simple professional English
+Use simple, professional English
+
+Use full sentences only
 
 Use "I" only
 
@@ -2063,99 +2058,67 @@ No links
 No discounts
 
 Do NOT use these words:
-
 free
-
 free service
-
 trial
-
 demo
 
-====================================================
-
-CONTENT REQUIREMENTS (MANDATORY)
+Do NOT sound salesy, pushy, or transactional
 
 ====================================================
+EMAIL CONTENT REQUIREMENTS (MANDATORY ORDER)
 
-The email must include, in this exact order:
+The email must be written exactly in the following sequence:
 
-One-line introduction
+Greeting
+Start with:
+Dear {client_first_name},
 
-Introduce yourself as Madhvi Sharma
+Introduction
+Introduce yourself clearly and naturally in one sentence:
+"I'm Madhvi Sharma, and I came across your Job Title: {data.get('job_title', '')} on Upwork."
 
-Explicitly write:
-"I saw your Job Title: {data.get('job_title', '')} on Upwork."
+Apology and reason for contacting
+Politely apologize for reaching out directly.
+State that you checked the job and noticed it was last seen recently.
+Explain, in a respectful way, that you wanted to confirm whether the role is still open or has already been closed.
 
-Second line – Apology + reason
+One-week work offer (politely phrased)
+State that if the role is still open, you would be happy to spend one week working closely to demonstrate your skills, communication, ownership, and responsiveness.
+Clearly state that there is no payment commitment during this period.
+Use soft, optional language (for example: "would be happy to", "if helpful", "if you feel comfortable").
 
-Apologize politely for reaching out directly
-
-Clearly state:
-
-You checked the job
-
-It was last seen recently
-
-You wanted to confirm whether the job is still open or has gone cold
-
-One-line value offer
-
-State that you are willing to work for one week
-
-Purpose: to demonstrate skills, communication, ownership, and responsiveness
-
-Clearly state there is no payment commitment during this period
-
-Do NOT use the word "free" or "trial"
-
-Hiring condition
-
-State that if the client is satisfied, hiring will proceed
-
-Explicitly say: only via Upwork
-
-Clearly state there will be no work outside Upwork
+Upwork compliance
+Clearly state that if the client is satisfied, any engagement will proceed strictly via Upwork, and there will be no work outside the platform.
 
 Polite closing
+Thank the client for their time and consideration.
 
-Thank the client
+Signature
+Close exactly with:
 
-Sign with:
+Warm regards,
 Madhvi Sharma
 
 ====================================================
+LENGTH & FORMAT
 
-TONE
+Keep the email short and readable
 
-====================================================
+Use short paragraphs (1–2 sentences each)
 
-Polite
-
-Calm
-
-Respectful
-
-Consent-based
-
-Not salesy
-
-Not pushy
+Ensure the output can be copied directly into Gmail without editing
 
 ====================================================
-
 OUTPUT FORMAT
 
-====================================================
-
-Output ONLY the email body.
-No explanations.
-No character count text."""
+Output only the email body.
+Do not include explanations, labels, or meta text."""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=600
+                max_tokens=800
             )
             
             result = response.choices[0].message.content.strip()

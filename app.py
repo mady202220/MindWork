@@ -2019,72 +2019,48 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the new polite, value-led prompt format
-            email_prompt = f"""✅ FINAL PROMPT — UPWORK DIRECT OUTREACH WITH 2 FOLLOW-UPS (POLITE & VALUE-LED)
+            # Use the new 500-character constraint prompt
+            email_prompt = f"""✅ FINAL PROMPT — 500-CHARACTER UPWORK OUTREACH (JOB TITLE INCLUDED)
 
-You are to generate THREE outputs from this prompt:
-
-One main outreach email
-
-Follow-up Email 1
-
-Follow-up Email 2
+You are to generate ONE email only.
 
 ====================================================
 
-SECTION 1: INPUTS
+INPUTS
 
 ====================================================
 
 Client First Name: {client_first_name}
 Job Title: {data.get('job_title', '')}
-Job Description: {job_description}
-Client Job Last Seen: Recently posted
+Job Last Seen: Recently posted
 
 ====================================================
 
-SECTION 2: ROLE & OBJECTIVE
+ROLE
 
 ====================================================
 
-ROLE:
-You are a senior individual freelancer writing polite, respectful, consent-based emails to a client who posted a job on Upwork.
-
-OBJECTIVE:
-
-Confirm whether the job is still open
-
-Reduce fear around Upwork off-platform communication
-
-Demonstrate senior ownership and responsibility
-
-Explain the value of a one-week initial effort to help the client evaluate capabilities
-
-Ask for the client's preference before suggesting a call
-
-This is not a sales email. The goal is to start a respectful conversation.
+You are a senior individual freelancer writing a very short, polite, and respectful email to a client who posted a job on Upwork.
 
 ====================================================
 
-SECTION 3: WRITING RULES (STRICT)
+HARD CONSTRAINTS (VERY IMPORTANT)
 
 ====================================================
 
-Use simple, professional English
+The email must be EXACTLY 500 characters (including spaces and line breaks)
 
-Use full sentences, even when writing bullet points
+Do NOT exceed or go below 500 characters
+
+Use simple professional English
 
 Use "I" only
 
-Keep emails short and skimmable
+No emojis
 
-Polite, calm, non-pushy tone
+No links
 
-Do NOT use emojis
-
-Do NOT include links
-
-Do NOT mention discounts
+No discounts
 
 Do NOT use these words:
 
@@ -2094,178 +2070,92 @@ free service
 
 trial
 
-no cost
-
-Do NOT sound promotional or urgent
+demo
 
 ====================================================
 
-SECTION 4: MAIN EMAIL STRUCTURE (MANDATORY)
+CONTENT REQUIREMENTS (MANDATORY)
 
 ====================================================
 
-SUBJECT LINE
+The email must include, in this exact order:
 
-Must include "Upwork"
+One-line introduction
 
-Must relate clearly to the job title
+Introduce yourself as Madhvi Sharma
 
-OPENING
+Explicitly write:
+"I saw your Job Title: {data.get('job_title', '')} on Upwork."
 
-Greet the client using {client_first_name}
+Second line – Apology + reason
 
-Introduce yourself clearly:
+Apologize politely for reaching out directly
 
-"I'm Madhvi Sharma, and I came across your job post on Upwork for {data.get('job_title', '')}."
+Clearly state:
 
-Add a sincere apology for reaching out directly
+You checked the job
 
-Clearly state that any work, contract, or payment will happen only via Upwork
+It was last seen recently
 
-State that you checked the posting and noticed it was last seen recently
+You wanted to confirm whether the job is still open or has gone cold
 
-Politely explain that you wanted to confirm whether the role is still open or already closed
+One-line value offer
 
-JOB UNDERSTANDING (2–3 BULLETS)
+State that you are willing to work for one week
 
-Extract 2–3 concrete points from {job_description}
+Purpose: to demonstrate skills, communication, ownership, and responsiveness
 
-Paraphrase them in your own words
+Clearly state there is no payment commitment during this period
 
-Show clear understanding of the scope or outcome
+Do NOT use the word "free" or "trial"
 
-INTEREST & WORKING STYLE
+Hiring condition
 
-State that you are interested only if the client has not finalized someone
+State that if the client is satisfied, hiring will proceed
 
-Explain that you prefer:
+Explicitly say: only via Upwork
 
-Fixed-price work
+Clearly state there will be no work outside Upwork
 
-Milestone-based structure
+Polite closing
 
-Clearly defined deliverables
+Thank the client
 
-Explicitly state that you take responsibility for scope clarification, so the client does not need to provide perfect requirements upfront
-
-ONE-WEEK INITIAL EFFORT (IMPORTANT)
-
-Explain that you typically invest the first week in:
-
-Clarifying requirements and assumptions yourself
-
-Validating the technical and architectural direction
-
-Setting up the project foundation and aligning on key flows
-
-Explain that this helps the client:
-
-Evaluate your capabilities and communication
-
-Reduce delivery and scope risk
-
-Make a confident selection decision
-
-Do NOT call this free, a demo, or unpaid work.
-
-TRANSITION & CTA
-
-State that once there is mutual alignment, milestones and commercial terms will be finalized via Upwork
-
-Politely ask for the client's preference:
-
-A short introductory call, or
-
-Continuing asynchronously first
-
-Suggest 11:00 AM their time tomorrow, but make it optional
-
-OPT-OUT (MANDATORY — EXACT TEXT)
-
-"If this is not relevant, please feel free to reply with STOP and I will not follow up further."
-
-SIGNATURE (EXACT)
-
-Thanks,
+Sign with:
 Madhvi Sharma
 
 ====================================================
 
-SECTION 5: FOLLOW-UP EMAIL GENERATION (2 EMAILS)
+TONE
 
 ====================================================
 
-GENERAL RULES FOR BOTH FOLLOW-UPS
+Polite
 
-Short and respectful
+Calm
 
-Full sentences
+Respectful
 
-No repetition of earlier wording
+Consent-based
 
-Each follow-up must add new value
+Not salesy
 
-Maintain Upwork-safe language
-
-Do NOT push for a call aggressively
-
-FOLLOW-UP EMAIL 1 (Gentle Reminder + Added Insight)
-
-Acknowledge that the client may be busy
-
-Reconfirm respect for Upwork and their process
-
-Add one new helpful insight related to:
-
-Technical approach, or
-
-Architecture choice, or
-
-Risk to avoid in similar projects
-
-Softly restate availability for discussion
-
-End with:
-"If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-Include the opt-out line exactly.
-
-FOLLOW-UP EMAIL 2 (Final, Polite Check-In)
-
-Keep it very short
-
-Focus on clarity and closure
-
-Reiterate willingness to step back if the role is closed
-
-Emphasize respect for their decision and time
-
-End with:
-"If you have any further questions, I suggest we schedule a call at 11:00 AM your time, where I can provide you with more insights."
-
-Include the opt-out line exactly.
-
-SIGNATURE FOR BOTH FOLLOW-UPS (EXACT)
-
-Thanks,
-Madhvi Sharma
+Not pushy
 
 ====================================================
 
-FINAL OUTPUT FORMAT (STRICT)
+OUTPUT FORMAT
 
 ====================================================
 
-MAIN EMAIL:
-
-FOLLOW-UP EMAIL 1:
-
-FOLLOW-UP EMAIL 2:"""
+Output ONLY the email body.
+No explanations.
+No character count text."""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=1800
+                max_tokens=600
             )
             
             result = response.choices[0].message.content.strip()

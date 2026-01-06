@@ -2019,10 +2019,15 @@ def generate_outreach():
             client_name = data.get('client_name', '')
             client_first_name = client_name.split()[0] if client_name else 'there'
             
-            # Use the new Gmail-ready, polite prompt format
+            # Use the new Gmail-ready prompt with subject and follow-ups
             email_prompt = f"""✅ FINAL REVERSE PROMPT — GMAIL-READY, POLITE UPWORK OUTREACH
 
-You are to generate ONE email only.
+You are to generate THREE outputs:
+
+1. Subject line
+2. Main email
+3. Follow-up Email 1
+4. Follow-up Email 2
 
 ====================================================
 INPUTS
@@ -2066,7 +2071,15 @@ demo
 Do NOT sound salesy, pushy, or transactional
 
 ====================================================
-EMAIL CONTENT REQUIREMENTS (MANDATORY ORDER)
+SUBJECT LINE REQUIREMENTS
+
+Must include "Upwork"
+Must reference the job title
+Keep it professional and non-spammy
+Maximum 60 characters
+
+====================================================
+MAIN EMAIL CONTENT REQUIREMENTS (MANDATORY ORDER)
 
 The email must be written exactly in the following sequence:
 
@@ -2101,9 +2114,30 @@ Warm regards,
 Madhvi Sharma
 
 ====================================================
+FOLLOW-UP EMAIL RULES
+
+Both follow-ups should be shorter than the main email
+Maintain the same polite, respectful tone
+Do not repeat exact wording from previous emails
+Add new value or perspective in each follow-up
+Use the same greeting and signature format
+
+FOLLOW-UP EMAIL 1 (Gentle Reminder)
+Acknowledge they may be busy
+Briefly restate your interest
+Add one helpful insight about the project type
+Keep it short and non-pushy
+
+FOLLOW-UP EMAIL 2 (Final Check-in)
+Very brief and respectful
+Offer to step back if role is closed
+Emphasize respect for their decision
+Final gentle availability statement
+
+====================================================
 LENGTH & FORMAT
 
-Keep the email short and readable
+Keep emails short and readable
 
 Use short paragraphs (1–2 sentences each)
 
@@ -2112,13 +2146,23 @@ Ensure the output can be copied directly into Gmail without editing
 ====================================================
 OUTPUT FORMAT
 
-Output only the email body.
-Do not include explanations, labels, or meta text."""
+Format your response exactly like this:
+
+SUBJECT: [subject line here]
+
+MAIN EMAIL:
+[main email content here]
+
+FOLLOW-UP EMAIL 1:
+[follow-up 1 content here]
+
+FOLLOW-UP EMAIL 2:
+[follow-up 2 content here]"""
             
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": email_prompt}],
-                max_tokens=800
+                max_tokens=1200
             )
             
             result = response.choices[0].message.content.strip()

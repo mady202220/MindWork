@@ -2022,7 +2022,7 @@ def generate_outreach():
             # Use the new Gmail-ready prompt with subject and follow-ups
             email_prompt = f"""✅ FINAL REVERSE PROMPT — GMAIL-READY, POLITE UPWORK OUTREACH
 
-You are to generate THREE outputs:
+You are to generate FOUR outputs:
 
 1. Subject line
 2. Main email

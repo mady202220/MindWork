@@ -2089,7 +2089,7 @@ Dear {client_first_name},
 
 Introduction
 Introduce yourself clearly and naturally in one sentence:
-"I'm Madhvi Sharma, and I came across your Job Title: {data.get('job_title', '')} on Upwork."
+"I'm Madhvi Sharma, and I came across your Job on Upwork."
 
 Apology and reason for contacting
 Politely apologize for reaching out directly.

@@ -2759,7 +2759,7 @@ def create_leads_table():
                 upwork_job_link TEXT,
                 client_name VARCHAR(255) NOT NULL,
                 source VARCHAR(50) NOT NULL CHECK (source IN ('upwork', 'email', 'whatsapp', 'linkedin')),
-                status VARCHAR(50) NOT NULL DEFAULT 'need_followup' CHECK (status IN ('need_followup', 'won', 'lost')),
+                status VARCHAR(50) NOT NULL DEFAULT 'following_up' CHECK (status IN ('following_up', 'won', 'lost')),
                 assigned_to VARCHAR(50) NOT NULL DEFAULT 'Saloni' CHECK (assigned_to IN ('Ashish', 'Saloni', 'Madhuri')),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -2860,6 +2860,26 @@ if os.getenv('DATABASE_URL'):
         conn.close()
     except Exception as e:
         print(f"Error adding columns: {e}")
+
+@app.route('/fix-leads-constraint', methods=['POST'])
+def fix_leads_constraint():
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        
+        # Drop the old constraint and add new one
+        c.execute("ALTER TABLE leads DROP CONSTRAINT IF EXISTS leads_status_check")
+        c.execute("ALTER TABLE leads ADD CONSTRAINT leads_status_check CHECK (status IN ('following_up', 'won', 'lost'))")
+        
+        # Update existing records
+        c.execute("UPDATE leads SET status = 'following_up' WHERE status = 'need_followup'")
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Leads constraint updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

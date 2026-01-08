@@ -1511,8 +1511,11 @@ def create_job():
         extension_name = 'mindwork'
         print(f"DETECTED: MindWork extension (basic job data only)")
     
-    # Generate job ID from URL
-    job_id = hashlib.md5(data['url'].encode()).hexdigest()
+    # Generate job ID from URL + title to handle slight URL variations
+    url_for_id = data['url'].split('?')[0]  # Remove query parameters
+    title_for_id = data.get('title', '').strip()
+    id_string = f"{url_for_id}_{title_for_id}"
+    job_id = hashlib.md5(id_string.encode()).hexdigest()
     
     try:
         conn = system.get_db_connection()

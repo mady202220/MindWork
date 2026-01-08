@@ -823,7 +823,7 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
+                       WHEN status = 'following_up' AND last_followup_date IS NOT NULL 
                        AND CURRENT_DATE - CAST(last_followup_date AS DATE) >= 2 
                        THEN true 
                        ELSE false 
@@ -836,7 +836,7 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
+                       WHEN status = 'following_up' AND last_followup_date IS NOT NULL 
                        AND julianday('now') - julianday(last_followup_date) >= 2 
                        THEN 1 
                        ELSE 0 
@@ -845,8 +845,27 @@ def leads():
             ORDER BY created_at DESC
         """)
     
-    leads = c.fetchall()
+    leads_data = c.fetchall()
     conn.close()
+    
+    # Convert tuples to dictionaries for template
+    leads = []
+    for lead_tuple in leads_data:
+        lead = {
+            'id': lead_tuple[0],
+            'upwork_job_link': lead_tuple[1],
+            'client_name': lead_tuple[2],
+            'source': lead_tuple[3],
+            'status': lead_tuple[4],
+            'assigned_to': lead_tuple[5],
+            'created_at': lead_tuple[6],
+            'updated_at': lead_tuple[7],
+            'last_followup_date': lead_tuple[8],
+            'notes': lead_tuple[9],
+            'followup_due': lead_tuple[10]
+        }
+        leads.append(lead)
+    
     return render_template('leads.html', leads=leads)
 
 @app.route('/leads', methods=['POST'])
@@ -861,8 +880,8 @@ def add_lead():
         
         if is_postgres:
             c.execute("""
-                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes, status)
+                VALUES (%s, %s, %s, %s, %s, 'following_up')
             """, (
                 data.get('upwork_job_link', ''),
                 data['client_name'],
@@ -872,8 +891,8 @@ def add_lead():
             ))
         else:
             c.execute("""
-                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes, status)
+                VALUES (?, ?, ?, ?, ?, 'following_up')
             """, (
                 data.get('upwork_job_link', ''),
                 data['client_name'],
@@ -901,8 +920,8 @@ def update_lead(lead_id):
         c = conn.cursor()
         is_postgres = os.getenv('DATABASE_URL') is not None
         
-        # Update last_followup_date when status changes to need_followup
-        if field == 'status' and value == 'need_followup':
+        # Update last_followup_date when status changes to following_up
+        if field == 'status' and value == 'following_up':
             if is_postgres:
                 c.execute(f"""
                     UPDATE leads 

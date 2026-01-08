@@ -25,7 +25,7 @@
         .lead-field input, .lead-field select, .lead-field textarea { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
         
         .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-        .status-need_followup { background: #fff3cd; color: #856404; }
+        .status-following_up { background: #fff3cd; color: #856404; }
         .status-won { background: #d4edda; color: #155724; }
         .status-lost { background: #f8d7da; color: #721c24; }
         
@@ -103,7 +103,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px;">
                 <select id="statusFilter" onchange="applyFilters()">
                     <option value="">All Statuses</option>
-                    <option value="need_followup">Need Follow-up</option>
+                    <option value="following_up">Following Up</option>
                     <option value="won">Won</option>
                     <option value="lost">Lost</option>
                 </select>
@@ -132,7 +132,7 @@
                     <div>
                         <h4>{{ lead.client_name }}</h4>
                         <span class="status-badge status-{{ lead.status }}">
-                            {% if lead.status == 'need_followup' %}Need Follow-up{% endif %}
+                            {% if lead.status == 'following_up' %}Following Up{% endif %}
                             {% if lead.status == 'won' %}Won{% endif %}
                             {% if lead.status == 'lost' %}Lost{% endif %}
                         </span>
@@ -149,7 +149,7 @@
                         <div class="lead-field">
                             <label>Status</label>
                             <select onchange="updateLead({{ lead.id }}, 'status', this.value)">
-                                <option value="need_followup" {% if lead.status == 'need_followup' %}selected{% endif %}>Need Follow-up</option>
+                                <option value="following_up" {% if lead.status == 'following_up' %}selected{% endif %}>Following Up</option>
                                 <option value="won" {% if lead.status == 'won' %}selected{% endif %}>Won</option>
                                 <option value="lost" {% if lead.status == 'lost' %}selected{% endif %}>Lost</option>
                             </select>

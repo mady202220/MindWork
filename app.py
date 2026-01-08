@@ -823,7 +823,7 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'following_up' AND last_followup_date IS NOT NULL 
+                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
                        AND CURRENT_DATE - CAST(last_followup_date AS DATE) >= 2 
                        THEN true 
                        ELSE false 
@@ -836,7 +836,7 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'following_up' AND last_followup_date IS NOT NULL 
+                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
                        AND julianday('now') - julianday(last_followup_date) >= 2 
                        THEN 1 
                        ELSE 0 
@@ -881,7 +881,7 @@ def add_lead():
         if is_postgres:
             c.execute("""
                 INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes, status)
-                VALUES (%s, %s, %s, %s, %s, 'following_up')
+                VALUES (%s, %s, %s, %s, %s, 'need_followup')
             """, (
                 data.get('upwork_job_link', ''),
                 data['client_name'],
@@ -892,7 +892,7 @@ def add_lead():
         else:
             c.execute("""
                 INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes, status)
-                VALUES (?, ?, ?, ?, ?, 'following_up')
+                VALUES (?, ?, ?, ?, ?, 'need_followup')
             """, (
                 data.get('upwork_job_link', ''),
                 data['client_name'],
@@ -920,8 +920,8 @@ def update_lead(lead_id):
         c = conn.cursor()
         is_postgres = os.getenv('DATABASE_URL') is not None
         
-        # Update last_followup_date when status changes to following_up
-        if field == 'status' and value == 'following_up':
+        # Update last_followup_date when status changes to need_followup
+        if field == 'status' and value == 'need_followup':
             if is_postgres:
                 c.execute(f"""
                     UPDATE leads 

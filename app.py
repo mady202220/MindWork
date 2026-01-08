@@ -2780,7 +2780,7 @@ def create_leads_table():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/fix-missing-columns', methods=['GET', 'POST']))
+@app.route('/fix-missing-columns', methods=['GET', 'POST'])
 def fix_missing_columns():
     try:
         conn = system.get_db_connection()

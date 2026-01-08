@@ -2861,7 +2861,7 @@ if os.getenv('DATABASE_URL'):
     except Exception as e:
         print(f"Error adding columns: {e}")
 
-@app.route('/fix-leads-constraint', methods=['POST'])
+@app.route('/fix-leads-constraint', methods=['GET', 'POST'])
 def fix_leads_constraint():
     try:
         conn = system.get_db_connection()

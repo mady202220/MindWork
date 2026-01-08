@@ -1391,13 +1391,23 @@ def check_job():
         
     data = request.json
     job_url = data.get('url')
+    job_title = data.get('title', '')
+    
+    if not job_url:
+        return jsonify({'exists': False, 'error': 'URL required'})
+    
+    # Generate job ID using same logic as create-job
+    url_for_id = job_url.split('?')[0]  # Remove query parameters
+    title_for_id = job_title.strip()
+    id_string = f"{url_for_id}_{title_for_id}"
+    job_id = hashlib.md5(id_string.encode()).hexdigest()
     
     conn = system.get_db_connection()
     c = conn.cursor()
     if os.getenv('DATABASE_URL'):
-        c.execute("SELECT id FROM jobs WHERE url = %s", (job_url,))
+        c.execute("SELECT id FROM jobs WHERE id = %s", (job_id,))
     else:
-        c.execute("SELECT id FROM jobs WHERE url = ?", (job_url,))
+        c.execute("SELECT id FROM jobs WHERE id = ?", (job_id,))
     result = c.fetchone()
     conn.close()
     
@@ -1434,12 +1444,16 @@ def enrich_job():
         
     data = request.json
     job_url = data.get('url')
+    job_title = data.get('title', '')
     
     if not job_url:
         return jsonify({'success': False, 'error': 'Job URL is required'})
     
-    # Generate job ID from URL
-    job_id = hashlib.md5(job_url.encode()).hexdigest()
+    # Generate job ID using same logic as create-job
+    url_for_id = job_url.split('?')[0]  # Remove query parameters
+    title_for_id = job_title.strip()
+    id_string = f"{url_for_id}_{title_for_id}"
+    job_id = hashlib.md5(id_string.encode()).hexdigest()
     
     try:
         conn = system.get_db_connection()

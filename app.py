@@ -823,8 +823,8 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
-                       AND CURRENT_DATE - CAST(last_followup_date AS DATE) >= 2 
+                       WHEN status = 'need_followup' AND updated_at IS NOT NULL 
+                       AND CURRENT_DATE - CAST(updated_at AS DATE) >= 2 
                        THEN true 
                        ELSE false 
                    END as followup_due
@@ -836,8 +836,8 @@ def leads():
             SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
                    created_at, updated_at, last_followup_date, notes,
                    CASE 
-                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
-                       AND julianday('now') - julianday(last_followup_date) >= 2 
+                       WHEN status = 'need_followup' AND updated_at IS NOT NULL 
+                       AND julianday('now') - julianday(updated_at) >= 2 
                        THEN 1 
                        ELSE 0 
                    END as followup_due
@@ -913,32 +913,42 @@ def add_lead():
 def update_lead(lead_id):
     try:
         data = request.json
-        field = list(data.keys())[0]
-        value = data[field]
         
         conn = system.get_db_connection()
         c = conn.cursor()
         is_postgres = os.getenv('DATABASE_URL') is not None
         
-        # Update last_followup_date when status changes to need_followup
-        if field == 'status' and value == 'need_followup':
+        # Update multiple fields at once
+        if 'status' in data and 'assigned_to' in data:
+            if is_postgres:
+                c.execute("""
+                    UPDATE leads 
+                    SET status = %s, assigned_to = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (data['status'], data['assigned_to'], lead_id))
+            else:
+                c.execute("""
+                    UPDATE leads 
+                    SET status = ?, assigned_to = ?, updated_at = datetime('now')
+                    WHERE id = ?
+                """, (data['status'], data['assigned_to'], lead_id))
+        else:
+            # Single field update (fallback)
+            field = list(data.keys())[0]
+            value = data[field]
+            
             if is_postgres:
                 c.execute(f"""
                     UPDATE leads 
-                    SET {field} = %s, last_followup_date = CURRENT_TIMESTAMP
+                    SET {field} = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                 """, (value, lead_id))
             else:
                 c.execute(f"""
                     UPDATE leads 
-                    SET {field} = ?, last_followup_date = datetime('now')
+                    SET {field} = ?, updated_at = datetime('now')
                     WHERE id = ?
                 """, (value, lead_id))
-        else:
-            if is_postgres:
-                c.execute(f"UPDATE leads SET {field} = %s WHERE id = %s", (value, lead_id))
-            else:
-                c.execute(f"UPDATE leads SET {field} = ? WHERE id = ?", (value, lead_id))
         
         conn.commit()
         conn.close()

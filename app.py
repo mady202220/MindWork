@@ -512,20 +512,22 @@ class MultiRSSProposalSystem:
     
     def get_work_examples(self, keywords):
         """Get work examples from Google Play Store"""
+        debug_log = []
+        debug_log.append(f"Starting Google Play Store search with keywords: {keywords}")
+        
         try:
             from google_play_scraper import search
-            print(f"Google Play Scraper imported successfully")
+            debug_log.append("Google Play Scraper imported successfully")
         except ImportError:
-            print("ERROR: google-play-scraper not installed")
-            return self.get_fallback_examples(keywords)
+            debug_log.append("ERROR: google-play-scraper not installed")
+            return self.get_fallback_examples(keywords), debug_log
         
         examples = []
-        print(f"Searching Google Play Store with keywords: {keywords}")
         
         # Search each keyword
         for i, keyword in enumerate(keywords[:2]):
             try:
-                print(f"Searching keyword {i+1}: '{keyword}'")
+                debug_log.append(f"Searching keyword {i+1}: '{keyword}'")
                 
                 # Try multiple countries to get results
                 countries = ['us', 'sg', 'in', 'gb']
@@ -533,20 +535,21 @@ class MultiRSSProposalSystem:
                 
                 for country in countries:
                     try:
+                        debug_log.append(f"Searching '{keyword}' in {country}")
                         results = search(
                             keyword,
                             lang="en",
                             country=country,
-                            n_hits=10
+                            n_hits=15  # Increased from 10
                         )
                         
                         if results:
-                            print(f"Found {len(results)} results for '{keyword}' in {country}")
+                            debug_log.append(f"Found {len(results)} results for '{keyword}' in {country}")
                             
                             for app in results:
                                 try:
                                     score = app.get('score') or 0
-                                    if score >= 3.0:  # Only good rated apps
+                                    if score >= 2.5:  # Lowered from 3.0 to get more results
                                         app_data = {
                                             'name': app.get('title', 'Unknown App'),
                                             'description': str(app.get('description', 'No description'))[:200] + '...',
@@ -555,33 +558,35 @@ class MultiRSSProposalSystem:
                                             'score': score
                                         }
                                         apps_found.append(app_data)
+                                        debug_log.append(f"Added app: {app_data['name']} (Score: {score})")
                                 except Exception as e:
+                                    debug_log.append(f"Error processing app: {e}")
                                     continue
                             
-                            if len(apps_found) >= 5:  # Got enough apps
+                            if len(apps_found) >= 8:  # Increased from 5
                                 break
                                 
                     except Exception as e:
-                        print(f"Error searching {country}: {e}")
+                        debug_log.append(f"Error searching {country}: {e}")
                         continue
                 
-                # Add 5 apps per keyword
-                keyword_apps = apps_found[:5]
+                # Add apps per keyword
+                keyword_apps = apps_found[:8]  # Increased from 5
                 examples.extend(keyword_apps)
-                print(f"Added {len(keyword_apps)} real apps for '{keyword}'")
+                debug_log.append(f"Added {len(keyword_apps)} apps for '{keyword}'")
                 
             except Exception as e:
-                print(f"Error with keyword '{keyword}': {e}")
+                debug_log.append(f"Error with keyword '{keyword}': {e}")
         
         # If we got real apps, return them
         if examples:
             examples.sort(key=lambda x: x['score'], reverse=True)
-            print(f"Returning {len(examples)} real Google Play Store apps")
-            return examples[:10]
+            debug_log.append(f"Returning {len(examples)} real Google Play Store apps")
+            return examples[:10], debug_log
         
         # Fallback if no real apps found
-        print("No real apps found, using fallback")
-        return self.get_fallback_examples(keywords)
+        debug_log.append("No real apps found, using fallback")
+        return self.get_fallback_examples(keywords), debug_log
     
     def get_fallback_examples(self, keywords):
         """Fallback examples when Google Play Store fails"""
@@ -1114,7 +1119,8 @@ def generate_proposal():
     try:
         # Extract keywords and generate proposal
         keywords, debug_log = system.extract_keywords(job[2], rss_id)
-        examples = system.get_work_examples(keywords)
+        examples, examples_debug = system.get_work_examples(keywords)
+        debug_log.extend(examples_debug)
         
         client_first_name = job[9] or job[16] or 'there'
         if client_first_name != 'there':

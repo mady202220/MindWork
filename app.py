@@ -811,25 +811,122 @@ def sent_jobs():
     conn.close()
     return render_template('sent_jobs.html', jobs=jobs)
 
-@app.route('/kanban')
+@app.route('/leads')
 @login_required
-def kanban():
+def leads():
     conn = system.get_db_connection()
     c = conn.cursor()
     is_postgres = os.getenv('DATABASE_URL') is not None
     
     if is_postgres:
-        c.execute("""SELECT id, title, description, url, client, budget, posted_date, processed,
-                     client_type, client_name, client_company, client_city, client_country, 
-                     linkedin_url, email, phone, whatsapp, enriched, decision_maker, skills, 
-                     categories, hourly_rate, site, rss_source_id, outreach_status, 
-                     proposal_status, submitted_by, enriched_at, enriched_by
-                     FROM jobs ORDER BY CAST(posted_date AS TIMESTAMP) DESC""")
+        c.execute("""
+            SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
+                   created_at, updated_at, last_followup_date, notes,
+                   CASE 
+                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
+                       AND CURRENT_DATE - CAST(last_followup_date AS DATE) >= 2 
+                       THEN true 
+                       ELSE false 
+                   END as followup_due
+            FROM leads 
+            ORDER BY created_at DESC
+        """)
     else:
-        c.execute("SELECT * FROM jobs ORDER BY datetime(posted_date) DESC")
-    jobs = c.fetchall()
+        c.execute("""
+            SELECT id, upwork_job_link, client_name, source, status, assigned_to, 
+                   created_at, updated_at, last_followup_date, notes,
+                   CASE 
+                       WHEN status = 'need_followup' AND last_followup_date IS NOT NULL 
+                       AND julianday('now') - julianday(last_followup_date) >= 2 
+                       THEN 1 
+                       ELSE 0 
+                   END as followup_due
+            FROM leads 
+            ORDER BY created_at DESC
+        """)
+    
+    leads = c.fetchall()
     conn.close()
-    return render_template('kanban.html', jobs=jobs)
+    return render_template('leads.html', leads=leads)
+
+@app.route('/leads', methods=['POST'])
+@login_required
+def add_lead():
+    try:
+        data = request.json
+        
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        if is_postgres:
+            c.execute("""
+                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                data.get('upwork_job_link', ''),
+                data['client_name'],
+                data['source'],
+                data.get('assigned_to', 'Saloni'),
+                data.get('notes', '')
+            ))
+        else:
+            c.execute("""
+                INSERT INTO leads (upwork_job_link, client_name, source, assigned_to, notes)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                data.get('upwork_job_link', ''),
+                data['client_name'],
+                data['source'],
+                data.get('assigned_to', 'Saloni'),
+                data.get('notes', '')
+            ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/leads/<int:lead_id>', methods=['PUT'])
+@login_required
+def update_lead(lead_id):
+    try:
+        data = request.json
+        field = list(data.keys())[0]
+        value = data[field]
+        
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        is_postgres = os.getenv('DATABASE_URL') is not None
+        
+        # Update last_followup_date when status changes to need_followup
+        if field == 'status' and value == 'need_followup':
+            if is_postgres:
+                c.execute(f"""
+                    UPDATE leads 
+                    SET {field} = %s, last_followup_date = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                """, (value, lead_id))
+            else:
+                c.execute(f"""
+                    UPDATE leads 
+                    SET {field} = ?, last_followup_date = datetime('now')
+                    WHERE id = ?
+                """, (value, lead_id))
+        else:
+            if is_postgres:
+                c.execute(f"UPDATE leads SET {field} = %s WHERE id = %s", (value, lead_id))
+            else:
+                c.execute(f"UPDATE leads SET {field} = ? WHERE id = ?", (value, lead_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/job-matcher', methods=['POST'])
 def job_matcher():
@@ -2630,7 +2727,60 @@ def add_status_columns():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/fix-missing-columns', methods=['GET', 'POST'])
+@app.route('/create-leads-table', methods=['GET', 'POST'])
+def create_leads_table():
+    try:
+        conn = system.get_db_connection()
+        c = conn.cursor()
+        
+        # Create leads table
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS leads (
+                id SERIAL PRIMARY KEY,
+                upwork_job_link TEXT,
+                client_name VARCHAR(255) NOT NULL,
+                source VARCHAR(50) NOT NULL CHECK (source IN ('upwork', 'email', 'whatsapp', 'linkedin')),
+                status VARCHAR(50) NOT NULL DEFAULT 'need_followup' CHECK (status IN ('need_followup', 'won', 'lost')),
+                assigned_to VARCHAR(50) NOT NULL DEFAULT 'Saloni' CHECK (assigned_to IN ('Ashish', 'Saloni', 'Madhuri')),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_followup_date TIMESTAMP,
+                notes TEXT
+            )
+        """)
+        
+        # Create indexes
+        c.execute("CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_leads_assigned_to ON leads(assigned_to)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_leads_last_followup ON leads(last_followup_date)")
+        
+        # Create update trigger function
+        c.execute("""
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                NEW.updated_at = CURRENT_TIMESTAMP;
+                RETURN NEW;
+            END;
+            $$ language 'plpgsql'
+        """)
+        
+        # Create trigger
+        c.execute("""
+            DROP TRIGGER IF EXISTS update_leads_updated_at ON leads;
+            CREATE TRIGGER update_leads_updated_at 
+            BEFORE UPDATE ON leads
+            FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+        """)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Leads table created successfully!'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/fix-missing-columns', methods=['GET', 'POST']))
 def fix_missing_columns():
     try:
         conn = system.get_db_connection()

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Management - MindWork</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/brand.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; position: relative; }
+        .header { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); color: white; padding: 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .nav-tabs { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 0; margin: 0; display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; }
+        .nav-tab { padding: 15px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-right: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; font-weight: 500; }
+        .nav-tab:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+        .nav-tab.active { background: rgba(255, 255, 255, 0.2); color: white; font-weight: 600; }
+        
+        .lead-card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
+        .lead-header { padding: 16px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .lead-body { padding: 16px; }
+        .lead-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .lead-field { display: flex; flex-direction: column; }
+        .lead-field label { font-weight: 500; margin-bottom: 4px; color: #666; }
+        .lead-field input, .lead-field select, .lead-field textarea { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status-need_followup { background: #fff3cd; color: #856404; }
+        .status-won { background: #d4edda; color: #155724; }
+        .status-lost { background: #f8d7da; color: #721c24; }
+        
+        .followup-due { background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-left: 8px; }
+        
+        .add-lead-form { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎯 Lead Management</h1>
+        <p>Track and manage leads from all sources</p>
+    </div>
+
+    <div class="nav-tabs">
+        <a href="/" class="nav-tab">Dashboard</a>
+        <a href="/rss/1" class="nav-tab">Web Development</a>
+        <a href="/rss/2" class="nav-tab">Manual Jobs</a>
+        <a href="/enriched-jobs" class="nav-tab">✅ Enriched</a>
+        <a href="/sent-jobs" class="nav-tab">📤 Sent</a>
+        <a href="/leads" class="nav-tab active">🎯 Leads</a>
+        <a href="/kanban" class="nav-tab">📋 Kanban</a>
+        <a href="/team-management" class="nav-tab">👥 Team</a>
+        <a href="/admin" class="nav-tab admin-tab">⚙️</a>
+        <a href="/logout" class="nav-tab" style="background: #e74c3c; margin-left: 10px;">🚪</a>
+    </div>
+
+    <div class="container" style="max-width: 1200px; margin: 30px auto; padding: 0 20px;">
+        
+        <!-- Add New Lead Form -->
+        <div class="add-lead-form">
+            <h3>➕ Add New Lead</h3>
+            <form id="addLeadForm">
+                <div class="form-row">
+                    <div class="lead-field">
+                        <label>Client Name *</label>
+                        <input type="text" name="client_name" required>
+                    </div>
+                    <div class="lead-field">
+                        <label>Source *</label>
+                        <select name="source" required>
+                            <option value="upwork">Upwork</option>
+                            <option value="email">Email</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="linkedin">LinkedIn</option>
+                        </select>
+                    </div>
+                    <div class="lead-field">
+                        <label>Assigned To</label>
+                        <select name="assigned_to">
+                            <option value="Ashish">Ashish</option>
+                            <option value="Saloni" selected>Saloni</option>
+                            <option value="Madhuri">Madhuri</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="lead-field">
+                        <label>Upwork Job Link</label>
+                        <input type="url" name="upwork_job_link" placeholder="https://...">
+                    </div>
+                    <div class="lead-field">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="2" placeholder="Initial conversation notes..."></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Lead</button>
+            </form>
+        </div>
+
+        <!-- Filters -->
+        <div class="analytics-card" style="margin-bottom: 20px;">
+            <h4>🔍 Filters</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 16px;">
+                <select id="statusFilter" onchange="applyFilters()">
+                    <option value="">All Statuses</option>
+                    <option value="need_followup">Need Follow-up</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                </select>
+                <select id="sourceFilter" onchange="applyFilters()">
+                    <option value="">All Sources</option>
+                    <option value="upwork">Upwork</option>
+                    <option value="email">Email</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="linkedin">LinkedIn</option>
+                </select>
+                <select id="assignedFilter" onchange="applyFilters()">
+                    <option value="">All Team Members</option>
+                    <option value="Ashish">Ashish</option>
+                    <option value="Saloni">Saloni</option>
+                    <option value="Madhuri">Madhuri</option>
+                </select>
+                <button onclick="clearFilters()" class="btn btn-secondary">Clear</button>
+            </div>
+        </div>
+
+        <!-- Leads List -->
+        <div id="leadsList">
+            {% for lead in leads %}
+            <div class="lead-card" data-status="{{ lead.status }}" data-source="{{ lead.source }}" data-assigned="{{ lead.assigned_to }}">
+                <div class="lead-header">
+                    <div>
+                        <h4>{{ lead.client_name }}</h4>
+                        <span class="status-badge status-{{ lead.status }}">
+                            {% if lead.status == 'need_followup' %}Need Follow-up{% endif %}
+                            {% if lead.status == 'won' %}Won{% endif %}
+                            {% if lead.status == 'lost' %}Lost{% endif %}
+                        </span>
+                        {% if lead.followup_due %}
+                        <span class="followup-due">Follow-up Due!</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <small>{{ lead.source.title() }} • {{ lead.assigned_to }}</small>
+                    </div>
+                </div>
+                <div class="lead-body">
+                    <div class="lead-grid">
+                        <div class="lead-field">
+                            <label>Status</label>
+                            <select onchange="updateLead({{ lead.id }}, 'status', this.value)">
+                                <option value="need_followup" {% if lead.status == 'need_followup' %}selected{% endif %}>Need Follow-up</option>
+                                <option value="won" {% if lead.status == 'won' %}selected{% endif %}>Won</option>
+                                <option value="lost" {% if lead.status == 'lost' %}selected{% endif %}>Lost</option>
+                            </select>
+                        </div>
+                        <div class="lead-field">
+                            <label>Assigned To</label>
+                            <select onchange="updateLead({{ lead.id }}, 'assigned_to', this.value)">
+                                <option value="Ashish" {% if lead.assigned_to == 'Ashish' %}selected{% endif %}>Ashish</option>
+                                <option value="Saloni" {% if lead.assigned_to == 'Saloni' %}selected{% endif %}>Saloni</option>
+                                <option value="Madhuri" {% if lead.assigned_to == 'Madhuri' %}selected{% endif %}>Madhuri</option>
+                            </select>
+                        </div>
+                        {% if lead.upwork_job_link %}
+                        <div class="lead-field">
+                            <label>Upwork Job</label>
+                            <a href="{{ lead.upwork_job_link }}" target="_blank" class="btn btn-sm btn-outline">View Job</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if lead.notes %}
+                    <div style="margin-top: 12px;">
+                        <label style="font-weight: 500; color: #666;">Notes:</label>
+                        <p style="margin-top: 4px; color: #333;">{{ lead.notes }}</p>
+                    </div>
+                    {% endif %}
+                    <div style="margin-top: 12px; font-size: 12px; color: #666;">
+                        Created: {{ lead.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% if lead.last_followup_date %}
+                        • Last Follow-up: {{ lead.last_followup_date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Add new lead
+        document.getElementById('addLeadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            fetch('/leads', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error adding lead: ' + result.error);
+                }
+            });
+        });
+
+        // Update lead
+        function updateLead(leadId, field, value) {
+            fetch(`/leads/${leadId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({[field]: value})
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    if (field === 'status' && (value === 'won' || value === 'lost')) {
+                        location.reload(); // Refresh to update follow-up status
+                    }
+                } else {
+                    alert('Error updating lead');
+                }
+            });
+        }
+
+        // Filters
+        function applyFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const source = document.getElementById('sourceFilter').value;
+            const assigned = document.getElementById('assignedFilter').value;
+            
+            document.querySelectorAll('.lead-card').forEach(card => {
+                const matchStatus = !status || card.dataset.status === status;
+                const matchSource = !source || card.dataset.source === source;
+                const matchAssigned = !assigned || card.dataset.assigned === assigned;
+                
+                card.style.display = (matchStatus && matchSource && matchAssigned) ? 'block' : 'none';
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sourceFilter').value = '';
+            document.getElementById('assignedFilter').value = '';
+            applyFilters();
+        }
+    </script>
+</body>
+</html>

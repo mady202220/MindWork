@@ -1498,12 +1498,18 @@ def create_job():
     apollo_fields = ['client_company', 'client_name', 'client_city', 'client_country', 'phone', 'email']
     has_apollo_data = any(data.get(field, '').strip() for field in apollo_fields)
     
+    print(f"Checking Apollo fields: {apollo_fields}")
+    print(f"Data received: {list(data.keys())}")
+    for field in apollo_fields:
+        value = data.get(field, '').strip()
+        print(f"  {field}: '{value}' (has value: {bool(value)})")
+    
     if has_apollo_data:
         extension_name = 'apollo'
+        print(f"DETECTED: Apollo extension (has enrichment data)")
     else:
         extension_name = 'mindwork'
-    
-    print(f"Detected extension: {extension_name}")
+        print(f"DETECTED: MindWork extension (basic job data only)")
     
     # Generate job ID from URL
     job_id = hashlib.md5(data['url'].encode()).hexdigest()

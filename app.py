@@ -1492,6 +1492,19 @@ def create_job():
     data = request.json
     print(f"Received job data: {data}")
     
+    # Auto-detect extension based on data fields
+    # Apollo sends enrichment data (company, person, city, country, phone, email)
+    # MindWork sends basic job data
+    apollo_fields = ['client_company', 'client_name', 'client_city', 'client_country', 'phone', 'email']
+    has_apollo_data = any(data.get(field, '').strip() for field in apollo_fields)
+    
+    if has_apollo_data:
+        extension_name = 'apollo'
+    else:
+        extension_name = 'mindwork'
+    
+    print(f"Detected extension: {extension_name}")
+    
     # Generate job ID from URL
     job_id = hashlib.md5(data['url'].encode()).hexdigest()
     
@@ -1519,30 +1532,53 @@ def create_job():
         existing_job = c.fetchone()
         
         if existing_job:
-            # Job exists - update with enrichment data if not already enriched
-            if existing_job[1] != 1:  # Not enriched yet
+            # Job exists - update with new data
+            update_fields = []
+            update_values = []
+            
+            # Map fields that can be updated (only non-empty values)
+            field_mapping = {
+                'client_name': data.get('client_name', '').strip(),
+                'client_company': data.get('client_company', '').strip(), 
+                'client_city': data.get('client_city', '').strip(),
+                'client_country': data.get('client_country', '').strip(),
+                'phone': data.get('phone', '').strip(),
+                'email': data.get('email', '').strip(),
+                'title': data.get('title', '').strip(),
+                'description': data.get('description', '').strip(),
+                'budget': data.get('budget', '').strip(),
+                'hourly_rate': data.get('hourly_rate', '').strip(),
+                'skills': data.get('skills', '').strip(),
+                'categories': data.get('categories', '').strip()
+            }
+            
+            # Only update fields that have actual values
+            for field, value in field_mapping.items():
+                if value and value != 'Not specified' and value != 'Unknown':
+                    update_fields.append(field)
+                    update_values.append(value)
+            
+            if update_fields:
+                update_values.append(job_id)
+                
                 if is_postgres:
-                    c.execute("""UPDATE jobs SET 
-                                client_name = %s, client_company = %s, 
-                                client_city = %s, client_country = %s
-                                WHERE id = %s""",
-                             (data.get('client_name', ''), data.get('client_company', ''),
-                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                    placeholders = ', '.join([f"{field} = %s" for field in update_fields])
+                    query = f"UPDATE jobs SET {placeholders} WHERE id = %s"
                 else:
-                    c.execute("""UPDATE jobs SET 
-                                client_name = ?, client_company = ?, 
-                                client_city = ?, client_country = ?
-                                WHERE id = ?""",
-                             (data.get('client_name', ''), data.get('client_company', ''),
-                              data.get('client_city', ''), data.get('client_country', ''), job_id))
+                    placeholders = ', '.join([f"{field} = ?" for field in update_fields])
+                    query = f"UPDATE jobs SET {placeholders} WHERE id = ?"
+                
+                print(f"Updating job {job_id} with fields: {update_fields}")
+                c.execute(query, tuple(update_values))
                 conn.commit()
                 conn.close()
-                return jsonify({'success': True, 'jobId': job_id, 'action': 'updated'})
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'updated', 'extension': extension_name, 'updated_fields': update_fields})
             else:
                 conn.close()
-                return jsonify({'success': True, 'jobId': job_id, 'action': 'already_enriched'})
+                return jsonify({'success': True, 'jobId': job_id, 'action': 'no_updates', 'extension': extension_name})
         else:
-            # New job - create with enrichment data
+            # New job - create with all provided data
+            print(f"Creating new job {job_id}")
             if is_postgres:
                 c.execute("""INSERT INTO jobs 
                             (id, title, description, url, client, budget, posted_date, 
@@ -1570,9 +1606,9 @@ def create_job():
             
             conn.commit()
             conn.close()
-            return jsonify({'success': True, 'jobId': job_id, 'action': 'created'})
+            return jsonify({'success': True, 'jobId': job_id, 'action': 'created', 'extension': extension_name})
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({'success': False, 'error': str(e), 'extension': extension_name})
 
 @app.route('/job/<job_id>')
 def job_detail(job_id):

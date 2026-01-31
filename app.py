@@ -530,7 +530,7 @@ class MultiRSSProposalSystem:
                 debug_log.append(f"Searching keyword {i+1}: '{keyword}'")
                 
                 # Try multiple countries to get results
-                countries = ['us', 'sg', 'in', 'gb']
+                countries = ['us', 'gb', 'ca', 'au']
                 apps_found = []
                 
                 for country in countries:
@@ -540,7 +540,7 @@ class MultiRSSProposalSystem:
                             keyword,
                             lang="en",
                             country=country,
-                            n_hits=15  # Increased from 10
+                            n_hits=20
                         )
                         
                         if results:
@@ -548,8 +548,12 @@ class MultiRSSProposalSystem:
                             
                             for app in results:
                                 try:
-                                    score = app.get('score') or 0
-                                    if score >= 2.5:  # Lowered from 3.0 to get more results
+                                    score = app.get('score')
+                                    if score is None:
+                                        continue
+                                    
+                                    score = float(score)
+                                    if score >= 2.0:  # Lower threshold for more results
                                         app_data = {
                                             'name': app.get('title', 'Unknown App'),
                                             'description': str(app.get('description', 'No description'))[:200] + '...',
@@ -563,7 +567,7 @@ class MultiRSSProposalSystem:
                                     debug_log.append(f"Error processing app: {e}")
                                     continue
                             
-                            if len(apps_found) >= 8:  # Increased from 5
+                            if len(apps_found) >= 10:
                                 break
                                 
                     except Exception as e:
@@ -571,7 +575,7 @@ class MultiRSSProposalSystem:
                         continue
                 
                 # Add apps per keyword
-                keyword_apps = apps_found[:8]  # Increased from 5
+                keyword_apps = apps_found[:10]
                 examples.extend(keyword_apps)
                 debug_log.append(f"Added {len(keyword_apps)} apps for '{keyword}'")
                 
@@ -580,9 +584,18 @@ class MultiRSSProposalSystem:
         
         # If we got real apps, return them
         if examples:
-            examples.sort(key=lambda x: x['score'], reverse=True)
-            debug_log.append(f"Returning {len(examples)} real Google Play Store apps")
-            return examples[:10], debug_log
+            # Remove duplicates by app ID
+            seen_ids = set()
+            unique_examples = []
+            for app in examples:
+                app_id = app['url'].split('id=')[-1] if 'id=' in app['url'] else app['name']
+                if app_id not in seen_ids:
+                    seen_ids.add(app_id)
+                    unique_examples.append(app)
+            
+            unique_examples.sort(key=lambda x: x['score'], reverse=True)
+            debug_log.append(f"Returning {len(unique_examples)} real Google Play Store apps")
+            return unique_examples[:10], debug_log
         
         # Fallback if no real apps found
         debug_log.append("No real apps found, using fallback")

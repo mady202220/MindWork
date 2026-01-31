@@ -552,30 +552,18 @@ class MultiRSSProposalSystem:
                             
                             for app in results:
                                 try:
-                                    debug_log.append(f"Processing app: {app.get('title', 'No title')} - Score: {app.get('score')}")
-                                    score = app.get('score')
-                                    if score is None:
-                                        score = 0
-                                        debug_log.append(f"Score was None, set to 0")
-                                    else:
-                                        score = float(score)
-                                        debug_log.append(f"Score converted to float: {score}")
-                                    
-                                    # Accept any app with a score (even low ones)
-                                    if score > 0:
-                                        app_data = {
-                                            'name': app.get('title', 'Unknown App'),
-                                            'description': str(app.get('description', 'No description'))[:200] + '...',
-                                            'url': f"https://play.google.com/store/apps/details?id={app.get('appId', '')}",
-                                            'installs': str(app.get('installs', '0')),
-                                            'score': score
-                                        }
-                                        apps_found.append(app_data)
-                                        debug_log.append(f"Added app: {app_data['name']} (Score: {score})")
-                                    else:
-                                        debug_log.append(f"Skipped app {app.get('title', 'No title')} - score {score} not > 0")
+                                    # Accept ALL apps regardless of score
+                                    app_data = {
+                                        'name': app.get('title', 'Unknown App'),
+                                        'description': str(app.get('description', 'No description'))[:200] + '...',
+                                        'url': f"https://play.google.com/store/apps/details?id={app.get('appId', '')}",
+                                        'installs': str(app.get('installs', '0')),
+                                        'score': app.get('score', 0)
+                                    }
+                                    apps_found.append(app_data)
+                                    debug_log.append(f"Added app: {app_data['name']}")
                                 except Exception as e:
-                                    debug_log.append(f"Error processing app {app.get('title', 'Unknown')}: {e}")
+                                    debug_log.append(f"Error processing app: {e}")
                                     continue
                             
                             if len(apps_found) >= 10:

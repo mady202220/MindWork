@@ -554,10 +554,12 @@ class MultiRSSProposalSystem:
                                 try:
                                     score = app.get('score')
                                     if score is None:
-                                        continue
+                                        score = 0
+                                    else:
+                                        score = float(score)
                                     
-                                    score = float(score)
-                                    if score >= 2.0:  # Lower threshold for more results
+                                    # Accept any app with a score (even low ones)
+                                    if score > 0:
                                         app_data = {
                                             'name': app.get('title', 'Unknown App'),
                                             'description': str(app.get('description', 'No description'))[:200] + '...',

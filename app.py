@@ -514,6 +514,7 @@ class MultiRSSProposalSystem:
         """Get work examples from Google Play Store"""
         debug_log = []
         debug_log.append(f"Starting Google Play Store search with keywords: {keywords}")
+        # Updated search functionality
         
         try:
             from google_play_scraper import search

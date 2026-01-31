@@ -552,11 +552,14 @@ class MultiRSSProposalSystem:
                             
                             for app in results:
                                 try:
+                                    debug_log.append(f"Processing app: {app.get('title', 'No title')} - Score: {app.get('score')}")
                                     score = app.get('score')
                                     if score is None:
                                         score = 0
+                                        debug_log.append(f"Score was None, set to 0")
                                     else:
                                         score = float(score)
+                                        debug_log.append(f"Score converted to float: {score}")
                                     
                                     # Accept any app with a score (even low ones)
                                     if score > 0:
@@ -569,8 +572,10 @@ class MultiRSSProposalSystem:
                                         }
                                         apps_found.append(app_data)
                                         debug_log.append(f"Added app: {app_data['name']} (Score: {score})")
+                                    else:
+                                        debug_log.append(f"Skipped app {app.get('title', 'No title')} - score {score} not > 0")
                                 except Exception as e:
-                                    debug_log.append(f"Error processing app: {e}")
+                                    debug_log.append(f"Error processing app {app.get('title', 'Unknown')}: {e}")
                                     continue
                             
                             if len(apps_found) >= 10:

@@ -455,7 +455,7 @@ class MultiRSSProposalSystem:
                 max_tokens=50
             )
             keywords = response.choices[0].message.content.strip().split(',')
-            result = [k.strip() for k in keywords[:2]]
+            result = [k.strip().strip('"').strip("'") for k in keywords[:2]]  # Remove quotes
             debug_log.append(f"Keywords extracted: {result}")
             return result, debug_log
         except Exception as e:
@@ -545,6 +545,9 @@ class MultiRSSProposalSystem:
                         
                         if results:
                             debug_log.append(f"Found {len(results)} results for '{keyword}' in {country}")
+                        else:
+                            debug_log.append(f"No results found for '{keyword}' in {country}")
+                            continue
                             
                             for app in results:
                                 try:
